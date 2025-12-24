@@ -1,29 +1,35 @@
 ﻿using AutoMapper;
 using store_app_apis.Modal;
+using store_app_apis.Models;
 using store_app_apis.Repos.Models;
+using System.Diagnostics.Metrics;
 namespace store_app_apis.Helper
 {
     public class AutoMapperHandler : Profile
     {
-        //public AutoMapperHandler() { CreateMap<TblCustomer, Customermodal>().ForMember(item => item.Statusname, opt => opt.MapFrom(item => (item.IsActive&&item.IsActive.Value)?"Active" : "Inactive")); }
-
-        // Before Reverse Mapping
-        //public AutoMapperHandler()
-        //{
-        //    CreateMap<TblCustomer, Customermodal>()
-        //        .ForMember(dest => dest.Statusname, opt =>
-        //            opt.MapFrom(src => src.IsActive.HasValue && src.IsActive.Value ? "Active" : "Inactive"));
-        //}
-
-        // We are getting input in customer model and we are converting it into TblCustomer so in this case we have a small change in our mapper handler    class. So as per the concept of automapper we have to create a map for both the classes.We can incluude reverse manner  also.   
-        
-        
-        // After Reverse Mapping
         public AutoMapperHandler()
         {
-            CreateMap<TblCustomer, Customermodal>()
-                .ForMember(dest => dest.Statusname, opt =>
-                    opt.MapFrom(src => src.IsActive.HasValue && src.IsActive.Value ? "Active" : "Inactive")).ReverseMap();
+
+            CreateMap<TblProduct, ProductDTO>().ReverseMap();
+
+            CreateMap<TblUser, UserModel>().ForMember(item => item.Statusname, opt => opt.MapFrom(
+                item => (item.Isactive != null && item.Isactive.Value) ? "Active" : "In active")).ReverseMap();
+            CreateMap<UserModel, TblUser>();
+            CreateMap<TblUser, UserModel>().ReverseMap();
+
+            CreateMap<TblInvoiceHeader, Invoice_Header_DTO>().ReverseMap();
+             
+            ////   25-10-2025
+            CreateMap<InvoiceCreateDTO, TblInvoiceHeader>();
+            CreateMap<InvoiceItemCreateDTO, TblSalesProductinfo>();
+            ////   25-10-2025
+
+            CreateMap<TblSalesProductinfo, SalesProductDTO>().ReverseMap();
+
+            CreateMap<TblCategory, CategoryDTO>().ReverseMap();
+            CreateMap<TblMeasurement, MeasurementDto>().ReverseMap();
+
+            CreateMap<CustomerDTO, TblCustomer>().ReverseMap();
         }
     }
 }

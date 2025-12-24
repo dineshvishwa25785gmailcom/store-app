@@ -6,16 +6,10 @@ namespace store_app_apis.Service
 {
     public interface ICustomerService
     {
-        //List<TblCustomer> Getall();
-        // List<Customermodal> Getall();  //-> This is Synchronuous Programming 
-        Task<List<Customermodal>> Getall(); // -> This is Asynchronuous Programming
-        Task<Customermodal> Getbycode(string code); // -> This is Asynchronuous Programming : Returning single value
-        Task<APIResponse> Remove(string code); // -> This is Asynchronuous Programming
-        Task<APIResponse> Create(Customermodal data); // -> POST Method to cteate a record
-                                                      //
-
-        Task<APIResponse> Update(Customermodal data,string code); // -> PUT Method to Update a record
-
-
+        Task<List<CustomerDTO>> Getall(); // -> This is Asynchronuous Programming
+        Task<CustomerDTO> GetByUniqueKeyID(string UKID); // -> This is Asynchronuous Programming : Returning single value
+        Task<APIResponse> Remove(string UKID); // -> This is Asynchronuous Programming
+        Task<APIResponse> Create(CustomerDTO data); // -> POST Method to cteate a record
+        Task<APIResponse> Update(CustomerDTO data,string UKID); // -> PUT Method to Update a record
     }
 }
