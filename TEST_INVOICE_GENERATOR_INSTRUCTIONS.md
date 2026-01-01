@@ -1,0 +1,249 @@
+# Test Invoice Generator - Usage Instructions
+
+## Overview
+A utility to programmatically create 3 sample invoices using the Angular application's API.
+
+## Files Created
+1. `test-data-generator.service.ts` - Service that creates invoices via API
+2. `test-invoice-generator.component.ts` - UI component to trigger creation
+3. Route added: `/test-invoices`
+
+## Sample Invoices Created
+
+### Invoice 1: TEST/2025/001
+- **Products**: 1 product
+- **Quantity**: 5 units
+- **Description**: Single product order
+- **Delivery**: Test Courier Service
+
+### Invoice 2: TEST/2025/002
+- **Products**: 2 products
+- **Quantities**: 10 units + 3 units
+- **Description**: Multiple products order
+- **Delivery**: Express Delivery
+
+### Invoice 3: TEST/2025/003
+- **Products**: 3 products
+- **Quantities**: 7 units + 15 units + 2 units
+- **Description**: Large order
+- **Delivery**: Standard Shipping
+
+## How to Use
+
+### Method 1: Using the UI Component (Recommended)
+
+1. **Start the application**:
+   ```bash
+   ng serve
+   ```
+
+2. **Login to the application**
+
+3. **Navigate to the test page**:
+   ```
+   http://localhost:4200/test-invoices
+   ```
+
+4. **Click "Create Sample Invoices" button**
+
+5. **Wait for success message**
+
+6. **Click "View Invoice List" to see created invoices**
+
+### Method 2: Using Browser Console
+
+1. **Open the application in browser**
+
+2. **Open Developer Console (F12)**
+
+3. **Inject the service and call the method**:
+   ```javascript
+   // Get the Angular injector
+   const injector = ng.probe(document.querySelector('app-root')).injector;
+   
+   // Get the service
+   const testService = injector.get('TestDataGeneratorService');
+   
+   // Create invoices
+   testService.createSampleInvoices();
+   ```
+
+### Method 3: Direct API Calls (Using Postman/cURL)
+
+**Endpoint**: `POST http://localhost:86/api/Invoice/Save`
+
+**Sample Payload for Invoice 1**:
+```json
+{
+  "invoiceYear": "2025",
+  "displayInvNumber": "TEST/2025/001",
+  "invoiceDate": "2025-01-15T10:00:00.000Z",
+  "companyId": "COMP01",
+  "customerId": "CUST001",
+  "destination": "Test Address, 1234567890, test@email.com, Test Customer",
+  "dispatchedThrough": "Test Courier Service",
+  "deliveryNote": "Handle with care",
+  "remark": "Test Invoice 1 - Single Product",
+  "totalAmount": 500,
+  "grandTotalAmount": 500,
+  "cgstRate": 0,
+  "sgstRate": 0,
+  "cgstAmount": 0,
+  "sgstAmount": 0,
+  "totalGstAmount": 0,
+  "createBy": "TestUser",
+  "updateBy": "TestUser",
+  "createDate": "2025-01-15T10:00:00.000Z",
+  "updateDate": "2025-01-15T10:00:00.000Z",
+  "createIp": "test",
+  "updateIp": "test",
+  "products": [
+    {
+      "invoiceYear": "2025",
+      "productId": "PROD001",
+      "quantity": 5,
+      "rateWithoutTax": 0,
+      "rateWithTax": 100,
+      "amount": 500,
+      "createBy": "TestUser",
+      "updateBy": "TestUser",
+      "createDate": "2025-01-15T10:00:00.000Z",
+      "updateDate": "2025-01-15T10:00:00.000Z",
+      "createIp": "test",
+      "updateIp": "test"
+    }
+  ]
+}
+```
+
+## Prerequisites
+
+Before creating test invoices, ensure:
+
+1. ✅ **Backend API is running** on `http://localhost:86`
+2. ✅ **At least 1 customer exists** in the database
+3. ✅ **At least 1 product exists** in the database
+4. ✅ **User is logged in** to the application
+
+## Verification
+
+After creating invoices, verify them:
+
+1. **Navigate to Invoice List**:
+   ```
+   http://localhost:4200/listinvoice
+   ```
+
+2. **Look for invoices starting with "TEST/"**
+
+3. **Check the following**:
+   - Invoice numbers: TEST/2025/001, TEST/2025/002, TEST/2025/003
+   - Customer name appears correctly
+   - Total amounts are calculated
+   - All products are listed
+
+## Troubleshooting
+
+### Error: "No customers found"
+**Solution**: Create at least one customer first
+```
+Navigate to: http://localhost:4200/customer/add
+```
+
+### Error: "No products found"
+**Solution**: Create at least one product first via backend or product management
+
+### Error: "Failed to save invoice"
+**Possible Causes**:
+1. Backend API is not running
+2. Database connection issue
+3. Invalid customer/product IDs
+4. Validation errors
+
+**Check**:
+- Backend console for error messages
+- Browser console for API errors
+- Network tab for failed requests
+
+### Error: "Authentication required"
+**Solution**: Login to the application first
+```
+Navigate to: http://localhost:4200/login
+```
+
+## API Response Format
+
+**Success Response**:
+```json
+{
+  "result": "pass",
+  "kyValue": "INV001",
+  "message": null
+}
+```
+
+**Error Response**:
+```json
+{
+  "result": "fail",
+  "kyValue": null,
+  "message": "Error message here"
+}
+```
+
+## Cleanup
+
+To remove test invoices:
+
+1. Navigate to invoice list
+2. Delete invoices starting with "TEST/"
+3. Or use SQL:
+   ```sql
+   DELETE FROM tbl_sales_productinfo WHERE invoice_number LIKE 'INV%'
+   DELETE FROM tbl_Invoice WHERE display_inv_number LIKE 'TEST/%'
+   ```
+
+## Notes
+
+- Invoice numbers are auto-generated by backend (INV001, INV002, etc.)
+- DisplayInvNumber is what you see in the UI (TEST/2025/001, etc.)
+- All test invoices use company ID: COMP01
+- All test invoices use the first available customer
+- Product rates are taken from the product master data
+- Totals are calculated automatically
+
+## Build and Deploy
+
+After adding the test generator:
+
+```bash
+# Build the application
+ng build
+
+# Serve the application
+ng serve
+```
+
+## Security Note
+
+⚠️ **Important**: This test generator should only be used in development/testing environments. Remove or disable it before deploying to production.
+
+To disable in production:
+1. Remove the route from `app.routes.ts`
+2. Or add environment check in the component
+3. Or remove the files entirely
+
+## Support
+
+If you encounter issues:
+1. Check browser console for errors
+2. Check backend API logs
+3. Verify database has required data
+4. Ensure all services are running
+5. Check network connectivity
+
+---
+
+**Created**: 2025
+**Version**: 1.0
+**Status**: Ready for Testing
