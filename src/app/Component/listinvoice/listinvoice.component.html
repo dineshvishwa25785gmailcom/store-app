@@ -1,0 +1,72 @@
+<div class="mat-elevation-z8">
+  <h3>Listing Invoice</h3>
+  <div class="actions">
+    <button mat-raised-button color="primary" routerLink="/createinvoice">
+      Create New [+]
+    </button>
+  </div>
+
+  <mat-form-field appearance="outline" class="filter">
+    <mat-label>Search</mat-label>
+    <input matInput (keyup)="applyFilter($event)" placeholder="Search invoices">
+  </mat-form-field>
+
+  <table mat-table [dataSource]="dataSource" class="full-width-table" matSort #sort="matSort">
+    <!-- Invoice Number -->
+    <ng-container matColumnDef="invNum">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Invoice Number</th>
+      <td mat-cell *matCellDef="let element">
+        <div>{{ element.invNum }}</div>
+        <small style="color: #666;">({{ element.invoiceNumber }})</small>
+      </td>
+    </ng-container>
+
+    <!-- Invoice Date -->
+    <ng-container matColumnDef="invDate">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Invoice Date</th>
+      <td mat-cell *matCellDef="let element">{{ element.invDate }}</td>
+    </ng-container>
+
+    <!-- Customer Name -->
+    <ng-container matColumnDef="cuName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Customer Name</th>
+      <td mat-cell *matCellDef="let element">{{ element.cuName }}</td>
+    </ng-container>
+
+    <!-- Company Name -->
+    <ng-container matColumnDef="coName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Company Name</th>
+      <td mat-cell *matCellDef="let element">{{ element.coName }}</td>
+    </ng-container>
+
+    <!-- Net Total -->
+    <ng-container matColumnDef="totalAmt">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Net Total</th>
+      <td mat-cell *matCellDef="let element">{{ element.totalAmt }}</td>
+    </ng-container>
+
+    <!-- Actions -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Actions</th>
+      <td mat-cell *matCellDef="let element">
+        <button mat-icon-button color="primary" (click)="Editinvoice(element.invoiceNumber)" matTooltip="Edit">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="invoiceremove(element.invoiceNumber)" matTooltip="Delete">
+          <mat-icon>delete</mat-icon>
+        </button>
+        <button mat-icon-button color="primary" (click)="DownloadInvoice(element.invoiceNumber)" matTooltip="Download">
+          <mat-icon>download</mat-icon>
+        </button>
+        <button mat-icon-button color="accent" (click)="PreviewInvoice(element.invoiceNumber)" matTooltip="Preview">
+          <mat-icon>visibility</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <mat-paginator #paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+</div>
