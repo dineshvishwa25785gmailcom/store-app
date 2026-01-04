@@ -58,7 +58,8 @@
                   "maximumError": "10kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": []
             },
             "development": {
               "optimization": false,
