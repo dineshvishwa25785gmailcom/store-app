@@ -72,6 +72,7 @@ export class CreateinvoiceComponent implements OnInit {
   updateBy: string = '';
   isEditing = false;
   isLoading = true;
+  selectedInvoiceDate: Date | null = null;
   //updateDate: string = new Date().toISOString();
   invoiceform!: FormGroup; // Declare the form variable
   constructor(
@@ -157,18 +158,33 @@ export class CreateinvoiceComponent implements OnInit {
         let editdata = res as any;
 
         if (editdata) {
+          // Convert date string to Date object
+          const invoiceDate = editdata.invoiceDate ? new Date(editdata.invoiceDate) : null;
+          
+          console.log('Loading invoice data:');
+          console.log('Original invoiceDate from API:', editdata.invoiceDate);
+          console.log('Converted to Date object:', invoiceDate);
+          console.log('Is Date:', invoiceDate instanceof Date);
+          
           this.invoiceform.patchValue({
             invoiceYear: editdata.invoiceYear || '',
             invoiceNumber: editdata.displayInvNumber || '',
             customerId: editdata.customerId || '',
             destination: editdata.destination || '',
             remark: editdata.remark || '',
-            invoiceDate: editdata.invoiceDate || '',
+            invoiceDate: invoiceDate,
             companyId: editdata.companyId || '',
             dispatchedThrough: editdata.dispatchedThrough || '',
             deliveryNote: editdata.deliveryNote || '',
             totalAmount: editdata.totalAmount || 0,
           });
+          
+          // Also set the ngModel binding
+          this.selectedInvoiceDate = invoiceDate;
+          
+          console.log('Form invoiceDate after patch:', this.invoiceform.get('invoiceDate')?.value);
+          console.log('selectedInvoiceDate:', this.selectedInvoiceDate);
+          
           this.editinvoiceno = editdata.invoiceNumber;
           this.cdr.detectChanges();
         }
@@ -267,6 +283,22 @@ export class CreateinvoiceComponent implements OnInit {
     }
 
     const formData = this.invoiceform.getRawValue();
+    
+    // Get the current date value from the form control
+    const currentDateValue = this.invoiceform.get('invoiceDate')?.value;
+    
+    console.log('=== SAVE INVOICE DEBUG ===');
+    console.log('Form invoiceDate before transform:', formData.invoiceDate);
+    console.log('Direct form control value:', currentDateValue);
+    console.log('invoiceDate type:', typeof formData.invoiceDate);
+    console.log('invoiceDate instanceof Date:', formData.invoiceDate instanceof Date);
+    console.log('Form dirty:', this.invoiceform.get('invoiceDate')?.dirty);
+    console.log('Form touched:', this.invoiceform.get('invoiceDate')?.touched);
+    console.log('=========================');
+    
+    // Override formData.invoiceDate with the direct control value to ensure we get the latest
+    formData.invoiceDate = currentDateValue;
+    
     const transformedPayload = this.transformPayloadForBackend(formData);
 
     this.service
@@ -312,11 +344,24 @@ export class CreateinvoiceComponent implements OnInit {
       updateIp: userIp
     }));
 
+    // Convert invoiceDate to ISO string, preserving the local date
+    let invoiceDate: string;
+    if (formData.invoiceDate instanceof Date) {
+      // Get local date components to avoid timezone issues
+      const year = formData.invoiceDate.getFullYear();
+      const month = String(formData.invoiceDate.getMonth() + 1).padStart(2, '0');
+      const day = String(formData.invoiceDate.getDate()).padStart(2, '0');
+      // Create ISO string with local date at midnight UTC
+      invoiceDate = `${year}-${month}-${day}T00:00:00.000Z`;
+    } else {
+      invoiceDate = formData.invoiceDate;
+    }
+
     // Build payload matching InvoiceCreateDTO exactly
     const payload: any = {
       invoiceYear: formData.invoiceYear,
       displayInvNumber: formData.invoiceNumber,
-      invoiceDate: formData.invoiceDate,
+      invoiceDate: invoiceDate,
       companyId: formData.companyId,
       customerId: formData.customerId,
       destination: formData.destination || '',
@@ -343,6 +388,7 @@ export class CreateinvoiceComponent implements OnInit {
       payload.invoiceNumber = this.editinvoiceno;
       console.log('Edit mode - sending invoiceNumber:', this.editinvoiceno);
       console.log('Edit mode - displayInvNumber:', payload.displayInvNumber);
+      console.log('Edit mode - invoiceDate:', payload.invoiceDate);
     } else {
       console.log('Create mode - no invoiceNumber sent');
     }
