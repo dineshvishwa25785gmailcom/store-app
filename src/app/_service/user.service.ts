@@ -17,7 +17,7 @@ import {
   users,
   TblRolepermission,
 } from '../_model/user.model';
-import { environment } from '../../environments/environment.development';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
