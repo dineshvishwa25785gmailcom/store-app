@@ -1,0 +1,89 @@
+<div class="quick-invoice-container">
+  <mat-card class="invoice-card">
+    <mat-card-header>
+      <mat-card-title>Quick Invoice Calculator</mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="action-buttons">
+        <button mat-raised-button color="primary" (click)="addProduct()">
+          <mat-icon>add</mat-icon> Add Product
+        </button>
+        <button mat-raised-button color="accent" (click)="printInvoice()" [disabled]="!isValidForPrint()">
+          <mat-icon>print</mat-icon> Print Invoice
+        </button>
+      </div>
+
+      <div class="table-container" *ngIf="items.length > 0">
+        <table class="invoice-table">
+          <thead>
+            <tr>
+              <th>Sl.No</th>
+              <th>Quantity</th>
+              <th>Rate</th>
+              <th>Total</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of items; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>
+                <input type="number" class="native-input" [(ngModel)]="item.quantity" 
+                       (ngModelChange)="calculateTotal(item)" min="1" placeholder="Qty"
+                       #quantityInput>
+              </td>
+              <td>
+                <input type="number" class="native-input" [(ngModel)]="item.rate" 
+                       (ngModelChange)="calculateTotal(item)" min="0" step="0.01" placeholder="Rate">
+              </td>
+              <td class="total-cell">₹{{ item.total | number:'1.2-2' }}</td>
+              <td>
+                <button mat-icon-button color="warn" (click)="deleteItem(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="grand-total">
+          <strong>Grand Total: ₹{{ getGrandTotal() | number:'1.2-2' }}</strong>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="items.length === 0">
+        <mat-icon>receipt_long</mat-icon>
+        <p>No items added yet. Click "Add Product" to start.</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Hidden print area -->
+  <div id="invoice-print-area" style="display: none;">
+    <h1>Quick Invoice</h1>
+    <p><strong>Date:</strong> {{ today | date:'dd/MM/yyyy' }}</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Sl.No</th>
+          <th>Quantity</th>
+          <th>Rate</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of items; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>{{ item.quantity }}</td>
+          <td>₹{{ item.rate | number:'1.2-2' }}</td>
+          <td>₹{{ item.total | number:'1.2-2' }}</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="3" style="text-align: right;"><strong>Grand Total:</strong></td>
+          <td><strong>₹{{ getGrandTotal() | number:'1.2-2' }}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

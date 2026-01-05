@@ -18,6 +18,7 @@ import { TestInvoiceGeneratorComponent } from './Component/test-invoice-generato
 import { UITestRunnerComponent } from './Component/ui-test-runner/ui-test-runner.component';
 import { CategoryComponent } from './Component/category/category.component';
 import { ProductComponent } from './Component/product/product.component';
+import { QuickInvoiceComponent } from './Component/quick-invoice/quick-invoice.component';
  
 export const routes: Routes = [
   {
@@ -59,6 +60,7 @@ export const routes: Routes = [
   { path: 'productcategory', component: CategoryComponent, canActivate: [authGuard] },
   { path: 'product', component: ProductComponent, canActivate: [authGuard] },
   { path: 'productdetails', component: ProductComponent, canActivate: [authGuard] },
+  { path: 'quick-invoice', component: QuickInvoiceComponent },
   { path: 'test-invoices', component: TestInvoiceGeneratorComponent, canActivate: [authGuard] },
   { path: 'ui-test', component: UITestRunnerComponent, canActivate: [authGuard] },
 ];
