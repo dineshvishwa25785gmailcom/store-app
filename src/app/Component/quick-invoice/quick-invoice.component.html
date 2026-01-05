@@ -6,14 +6,8 @@
     
     <mat-card-content>
       <div class="customer-section">
-        <div class="customer-input-wrapper">
-          <input type="text" class="customer-input" [(ngModel)]="customerName" 
-                 placeholder="Customer Name" x-webkit-speech speech #customerNameInput>
-          <button mat-icon-button class="mic-button" (click)="startVoiceRecognition()" 
-                  [class.listening]="isListening">
-            <mat-icon>{{ isListening ? 'mic' : 'mic_none' }}</mat-icon>
-          </button>
-        </div>
+        <input type="text" class="customer-input" [(ngModel)]="customerName" 
+               placeholder="Customer Name" #customerNameInput>
       </div>
       
       <div class="action-buttons">
@@ -44,14 +38,8 @@
             <tr *ngFor="let item of items; let i = index">
               <td>{{ i + 1 }}</td>
               <td>
-                <div class="input-with-mic">
-                  <input type="text" class="native-input" [(ngModel)]="item.product" 
-                         placeholder="Product" x-webkit-speech speech #productInput>
-                  <button mat-icon-button class="inline-mic-button" (click)="startProductVoiceRecognition(i)" 
-                          [class.listening]="listeningIndex === i">
-                    <mat-icon>{{ listeningIndex === i ? 'mic' : 'mic_none' }}</mat-icon>
-                  </button>
-                </div>
+                <input type="text" class="native-input" [(ngModel)]="item.product" 
+                       placeholder="Product" #productInput>
               </td>
               <td>
                 <input type="number" class="native-input" [(ngModel)]="item.quantity" 

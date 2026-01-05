@@ -56,14 +56,8 @@ mat-card-content {
   padding-top: 8px;
 }
 
-.customer-input-wrapper {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
 .customer-input {
-  flex: 1;
+  width: 100%;
   padding: 12px;
   border: 2px solid #667eea;
   border-radius: 6px;
@@ -77,32 +71,6 @@ mat-card-content {
   outline: none;
   border-color: #764ba2;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.mic-button {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  background: #667eea;
-  color: white;
-}
-
-.mic-button:hover {
-  background: #764ba2;
-}
-
-.mic-button.listening {
-  background: #e74c3c;
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
 }
 
 .action-buttons {
@@ -189,38 +157,6 @@ mat-card-content {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
-}
-
-.input-with-mic {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.input-with-mic .native-input {
-  flex: 1;
-}
-
-.inline-mic-button {
-  flex-shrink: 0;
-  width: 32px !important;
-  height: 32px !important;
-  padding: 0 !important;
-  min-width: 32px !important;
-  line-height: 32px !important;
-}
-
-.inline-mic-button mat-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-  line-height: 18px;
-  color: #667eea;
-}
-
-.inline-mic-button.listening mat-icon {
-  color: #e74c3c;
-  animation: pulse 1s infinite;
 }
 
 .total-cell {

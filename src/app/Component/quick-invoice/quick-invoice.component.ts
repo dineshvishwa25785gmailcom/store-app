@@ -22,8 +22,6 @@ export class QuickInvoiceComponent {
   items: InvoiceItem[] = [];
   today = new Date();
   customerName: string = '';
-  isListening: boolean = false;
-  listeningIndex: number = -1;
   @ViewChildren('productInput') productInputs!: QueryList<ElementRef>;
   
   addProduct() {
@@ -232,85 +230,5 @@ export class QuickInvoiceComponent {
     
     // Save PDF
     doc.save(`invoice-${dateStr.replace(/\//g, '-')}.pdf`);
-  }
-
-  startVoiceRecognition() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Voice recognition is not supported in your browser. Please use Chrome or Edge.');
-      return;
-    }
-
-    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-    const recognition = new SpeechRecognition();
-    
-    recognition.lang = 'en-US';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => {
-      this.isListening = true;
-    };
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      this.customerName = transcript;
-      this.isListening = false;
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      this.isListening = false;
-      if (event.error === 'no-speech') {
-        alert('No speech detected. Please try again.');
-      } else if (event.error === 'not-allowed') {
-        alert('Microphone access denied. Please allow microphone access.');
-      }
-    };
-
-    recognition.onend = () => {
-      this.isListening = false;
-    };
-
-    recognition.start();
-  }
-
-  startProductVoiceRecognition(index: number) {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Voice recognition is not supported in your browser. Please use Chrome or Edge.');
-      return;
-    }
-
-    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-    const recognition = new SpeechRecognition();
-    
-    recognition.lang = 'en-US';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => {
-      this.listeningIndex = index;
-    };
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      this.items[index].product = transcript;
-      this.listeningIndex = -1;
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      this.listeningIndex = -1;
-      if (event.error === 'no-speech') {
-        alert('No speech detected. Please try again.');
-      } else if (event.error === 'not-allowed') {
-        alert('Microphone access denied. Please allow microphone access.');
-      }
-    };
-
-    recognition.onend = () => {
-      this.listeningIndex = -1;
-    };
-
-    recognition.start();
   }
 }
