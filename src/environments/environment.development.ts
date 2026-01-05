@@ -1,3 +1,3 @@
 export const environment = {
-    apiUrl:"http://localhost:86/api/"
+    apiUrl:"https://store-app-api-dinesh-gjexddd0grcpbsf8.canadacentral-01.azurewebsites.net/api/"
 };

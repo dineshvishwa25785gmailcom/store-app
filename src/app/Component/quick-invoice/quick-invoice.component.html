@@ -5,12 +5,20 @@
     </mat-card-header>
     
     <mat-card-content>
+      <div class="customer-section">
+        <input type="text" class="customer-input" [(ngModel)]="customerName" 
+               placeholder="Customer Name" #customerNameInput>
+      </div>
+      
       <div class="action-buttons">
         <button mat-raised-button color="primary" (click)="addProduct()">
           <mat-icon>add</mat-icon> Add Product
         </button>
+        <button mat-raised-button color="accent" (click)="downloadPDF()" [disabled]="!isValidForPrint()">
+          <mat-icon>download</mat-icon> Download PDF
+        </button>
         <button mat-raised-button color="accent" (click)="printInvoice()" [disabled]="!isValidForPrint()">
-          <mat-icon>print</mat-icon> Print Invoice
+          <mat-icon>print</mat-icon> Print
         </button>
       </div>
 
@@ -19,6 +27,7 @@
           <thead>
             <tr>
               <th>Sl.No</th>
+              <th>Product Name</th>
               <th>Quantity</th>
               <th>Rate</th>
               <th>Total</th>
@@ -29,9 +38,12 @@
             <tr *ngFor="let item of items; let i = index">
               <td>{{ i + 1 }}</td>
               <td>
+                <input type="text" class="native-input" [(ngModel)]="item.product" 
+                       placeholder="Product" #productInput>
+              </td>
+              <td>
                 <input type="number" class="native-input" [(ngModel)]="item.quantity" 
-                       (ngModelChange)="calculateTotal(item)" min="1" placeholder="Qty"
-                       #quantityInput>
+                       (ngModelChange)="calculateTotal(item)" min="1" placeholder="Qty">
               </td>
               <td>
                 <input type="number" class="native-input" [(ngModel)]="item.rate" 
@@ -63,10 +75,12 @@
   <div id="invoice-print-area" style="display: none;">
     <h1>Quick Invoice</h1>
     <p><strong>Date:</strong> {{ today | date:'dd/MM/yyyy' }}</p>
+    <p><strong>Customer:</strong> {{ customerName || 'N/A' }}</p>
     <table>
       <thead>
         <tr>
           <th>Sl.No</th>
+          <th>Product Name</th>
           <th>Quantity</th>
           <th>Rate</th>
           <th>Total</th>
@@ -75,12 +89,13 @@
       <tbody>
         <tr *ngFor="let item of items; let i = index">
           <td>{{ i + 1 }}</td>
+          <td>{{ item.product }}</td>
           <td>{{ item.quantity }}</td>
           <td>₹{{ item.rate | number:'1.2-2' }}</td>
           <td>₹{{ item.total | number:'1.2-2' }}</td>
         </tr>
         <tr class="total-row">
-          <td colspan="3" style="text-align: right;"><strong>Grand Total:</strong></td>
+          <td colspan="4" style="text-align: right;"><strong>Grand Total:</strong></td>
           <td><strong>₹{{ getGrandTotal() | number:'1.2-2' }}</strong></td>
         </tr>
       </tbody>
