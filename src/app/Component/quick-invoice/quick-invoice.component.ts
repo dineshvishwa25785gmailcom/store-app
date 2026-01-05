@@ -102,6 +102,135 @@ export class QuickInvoiceComponent {
     }, 250);
   }
 
+  async shareToWhatsApp() {
+    if (!this.isValidForPrint()) {
+      alert('Please fill in quantity and rate fields with valid values before sharing.');
+      return;
+    }
+
+    try {
+      // Generate PDF
+      const doc = new jsPDF();
+      const dateStr = new Date().toLocaleDateString('en-GB');
+      
+      // Outer border shadow for entire content
+      doc.setFillColor(200, 200, 200);
+      doc.roundedRect(17, 12, 176, 0, 3, 3, 'S');
+      
+      const tableStartY = 52;
+      const rowHeight = 10;
+      const totalHeight = tableStartY + rowHeight + (this.items.length * rowHeight) + rowHeight + 8;
+      
+      doc.setDrawColor(245, 245, 245);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(15, 10, 180, totalHeight, 3, 3, 'S');
+      
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(102, 126, 234);
+      doc.text('QUICK INVOICE', 105, 22, { align: 'center' });
+      
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.3);
+      doc.line(20, 28, 190, 28);
+      
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Date: ${dateStr}`, 20, 38);
+      doc.text(`Customer: ${this.customerName || 'N/A'}`, 120, 38);
+      
+      doc.line(20, 44, 190, 44);
+      
+      const startY = tableStartY;
+      const colX = [20, 40, 90, 120, 150];
+      
+      doc.setFillColor(102, 126, 234);
+      doc.rect(20, startY, 170, rowHeight, 'F');
+      doc.setDrawColor(80, 80, 80);
+      doc.setLineWidth(0.3);
+      doc.rect(20, startY, 170, rowHeight);
+      
+      colX.slice(1).forEach(x => {
+        doc.line(x, startY, x, startY + rowHeight);
+      });
+      
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text('Sl.No', 30, startY + 6.5, { align: 'center' });
+      doc.text('Product Name', 65, startY + 6.5, { align: 'center' });
+      doc.text('Qty', 105, startY + 6.5, { align: 'center' });
+      doc.text('Rate', 135, startY + 6.5, { align: 'center' });
+      doc.text('Total', 170, startY + 6.5, { align: 'center' });
+      
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      
+      let yPos = startY + rowHeight;
+      this.items.forEach((item, index) => {
+        if (index % 2 === 0) {
+          doc.setFillColor(245, 245, 245);
+          doc.rect(20, yPos, 170, rowHeight, 'F');
+        }
+        
+        doc.setDrawColor(200, 200, 200);
+        doc.rect(20, yPos, 170, rowHeight);
+        
+        colX.slice(1).forEach(x => {
+          doc.line(x, yPos, x, yPos + rowHeight);
+        });
+        
+        doc.text((index + 1).toString(), 30, yPos + 6.5, { align: 'center' });
+        doc.text(item.product || '', 65, yPos + 6.5, { align: 'center' });
+        doc.text(item.quantity?.toString() || '0', 105, yPos + 6.5, { align: 'center' });
+        doc.text((item.rate?.toFixed(2) || '0.00'), 135, yPos + 6.5, { align: 'center' });
+        doc.text((item.total.toFixed(2)), 170, yPos + 6.5, { align: 'center' });
+        
+        yPos += rowHeight;
+      });
+      
+      doc.setFillColor(240, 240, 255);
+      doc.rect(20, yPos, 170, rowHeight, 'F');
+      doc.setDrawColor(80, 80, 80);
+      doc.setLineWidth(0.5);
+      doc.rect(20, yPos, 170, rowHeight);
+      doc.line(150, yPos, 150, yPos + rowHeight);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('GRAND TOTAL:', 85, yPos + 7, { align: 'center' });
+      doc.text(`Rs. ${this.getGrandTotal().toFixed(2)}`, 170, yPos + 7, { align: 'center' });
+      
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(100, 100, 100);
+      doc.text('Thank you for your business!', 105, 280, { align: 'center' });
+      
+      // Get PDF as blob
+      const pdfBlob = doc.output('blob');
+      const fileName = `invoice-${dateStr.replace(/\//g, '-')}.pdf`;
+      const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+      // Check if Web Share API is supported
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Quick Invoice',
+          text: `Invoice for ${this.customerName || 'Customer'} - Total: Rs.${this.getGrandTotal().toFixed(2)}`
+        });
+      } else {
+        // Fallback: download the PDF
+        alert('Sharing is not supported on this device. The PDF will be downloaded instead.');
+        doc.save(fileName);
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      alert('Unable to share. Please try downloading the PDF instead.');
+    }
+  }
+
   downloadPDF() {
     if (!this.isValidForPrint()) {
       alert('Please fill in quantity and rate fields with valid values before downloading.');

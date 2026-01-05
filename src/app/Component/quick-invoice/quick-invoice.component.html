@@ -17,6 +17,9 @@
         <button mat-raised-button color="accent" (click)="downloadPDF()" [disabled]="!isValidForPrint()">
           <mat-icon>download</mat-icon> Download PDF
         </button>
+        <button mat-raised-button color="accent" (click)="shareToWhatsApp()" [disabled]="!isValidForPrint()">
+          <mat-icon>share</mat-icon> Share
+        </button>
         <button mat-raised-button color="accent" (click)="printInvoice()" [disabled]="!isValidForPrint()">
           <mat-icon>print</mat-icon> Print
         </button>

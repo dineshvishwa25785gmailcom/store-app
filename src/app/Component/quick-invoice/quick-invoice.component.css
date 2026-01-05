@@ -92,6 +92,7 @@ mat-card-content {
   gap: 5px;
   height: 48px;
   font-size: 14px;
+  min-width: 0;
 }
 
 .table-container {
@@ -277,8 +278,15 @@ mat-form-field {
   }
   
   .action-buttons button {
-    font-size: 13px;
+    font-size: 12px;
     height: 44px;
+    padding: 0 8px;
+  }
+  
+  .action-buttons button mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
   }
   
   .grand-total {
