@@ -226,7 +226,6 @@ export class QuickInvoiceComponent {
         doc.save(fileName);
       }
     } catch (error) {
-      console.error('Error sharing:', error);
       alert('Unable to share. Please try downloading the PDF instead.');
     }
   }

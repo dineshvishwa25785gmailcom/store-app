@@ -1,0 +1,107 @@
+<div class="profile-container">
+  <!-- Header -->
+  <div class="profile-header">
+    <h1>User Profile</h1>
+    <p>View and edit your profile information</p>
+  </div>
+
+  <!-- Profile Card -->
+  <mat-card class="profile-card">
+    <mat-card-header>
+      <mat-card-title>Profile Information</mat-card-title>
+      <mat-card-subtitle>Update your personal details</mat-card-subtitle>
+    </mat-card-header>
+
+    <!-- Info dialog template (non-editable) -->
+    <ng-template #infoDialog>
+      <div class="info-dialog">
+        <div class="avatar"><mat-icon>account_circle</mat-icon></div>
+        <div class="info">
+          <h3>{{ profileForm.get('name')?.value || 'Your Name' }}</h3>
+          <p class="email">{{ userEmailDisplay || 'No email set' }}</p>
+          <p class="hint">To change your name, edit the fields and click <strong>Save Changes</strong>.</p>
+          <p class="hint">Email cannot be changed from this screen. Contact administrator to change email.</p>
+        </div>
+      </div>
+    </ng-template>
+
+    <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
+      <mat-card-content>
+        <div class="profile-grid">
+
+          <!-- Editable panel (form) - shown first on mobile via CSS ordering -->
+          <div class="right-panel editable-panel">
+            <button type="button" class="mobile-info-toggle" mat-stroked-button color="primary" (click)="openInfoDialog(infoDialog)">
+              Show Info
+            </button>
+
+            <!-- Username (Read-only) -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Username</mat-label>
+              <input matInput formControlName="username" readonly placeholder="Username" />
+              <mat-icon matSuffix>account_circle</mat-icon>
+            </mat-form-field>
+
+            <!-- New Username (optional) -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Change Username (optional)</mat-label>
+              <input matInput formControlName="newUsername" placeholder="Enter new username (optional)" />
+              <mat-hint>Leave blank to keep current username</mat-hint>
+              <mat-icon matSuffix>edit</mat-icon>
+            </mat-form-field>
+
+            <!-- Name -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Full Name</mat-label>
+              <input matInput formControlName="name" placeholder="Enter your full name" />
+              <mat-icon matSuffix>person</mat-icon>
+            </mat-form-field>
+            <mat-error *ngIf="profileForm.get('name')?.invalid && profileForm.get('name')?.touched">Name is required</mat-error>
+
+            <!-- Phone -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Phone Number</mat-label>
+              <input matInput formControlName="phone" placeholder="Enter your phone number" />
+              <mat-icon matSuffix>phone</mat-icon>
+            </mat-form-field>
+            <mat-error *ngIf="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched">Phone number is required</mat-error>
+
+            <!-- Address -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Address</mat-label>
+              <textarea matInput formControlName="address" rows="3" placeholder="Enter your address"></textarea>
+              <mat-icon matSuffix>location_on</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <!-- info panel removed from inline layout; shown in dialog instead -->
+
+        </div>
+      </mat-card-content>
+
+      <!-- Actions -->
+      <mat-card-actions>
+        <div class="action-buttons">
+          <button 
+            type="submit" 
+            mat-raised-button 
+            color="primary"
+            [disabled]="isLoading">
+            <mat-icon *ngIf="!isLoading">save</mat-icon>
+            <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+            <span *ngIf="!isLoading">Save Changes</span>
+            <span *ngIf="isLoading">Saving...</span>
+          </button>
+          <button 
+            type="button" 
+            mat-raised-button 
+            color="accent"
+            (click)="cancelUpdate()">
+            <mat-icon>close</mat-icon>
+            Cancel
+          </button>
+        </div>
+      </mat-card-actions>
+    </form>
+  </mat-card>
+</div>

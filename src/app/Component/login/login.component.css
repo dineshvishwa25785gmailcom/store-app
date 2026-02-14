@@ -1,0 +1,232 @@
+.login-container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 0 0 32px 0;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.10);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.login-header {
+  text-align: center;
+  margin: 0 0 24px 0;
+}
+
+.login-header h1 {
+  margin: 0 0 6px 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+}
+
+.login-header p {
+  margin: 0 0 0 0;
+  color: #666;
+  font-size: 15px;
+}
+
+.mode-toggle-card {
+  margin: 0 auto 24px auto;
+  background: #f5f5f5;
+  box-shadow: none !important;
+  border-radius: 14px;
+  padding: 16px 24px 8px 24px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  padding: 8px 0 0 0;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 18px 0;
+  border-radius: 14px;
+  background: #fff;
+  color: #666;
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+  font-size: 18px;
+  font-weight: 700;
+  min-width: 140px;
+  min-height: 54px;
+}
+
+.mode-btn:hover {
+  border-color: #2196F3;
+  color: #2196F3;
+}
+
+.mode-btn.active {
+  background: #2196F3;
+  color: white;
+  border-color: #2196F3;
+}
+
+.login-card {
+  margin: 0 auto 32px auto;
+  border-radius: 20px;
+  box-shadow: 0 6px 24px 0 rgba(0,0,0,0.13);
+  border: none;
+  padding: 32px 24px 24px 24px;
+  background: #f8fbff;
+  max-width: 420px;
+  width: 100%;
+}
+.full-width {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.remember-me {
+  margin: 10px 0 18px 0;
+  display: block;
+  font-size: 16px;
+}
+
+.action-buttons {
+  padding: 18px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.full-width-btn {
+  width: 100%;
+  padding: 16px !important;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #2196F3 0%, #21CBF3 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px 0 rgba(33,203,243,0.10);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+}
+.full-width-btn:active {
+  background: linear-gradient(90deg, #21CBF3 0%, #2196F3 100%);
+}
+
+.footer-links {
+  padding: 18px 0 0 0;
+  text-align: center;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  font-size: 14px;
+}
+
+.footer-links a {
+  margin: 0 4px;
+}
+
+.divider {
+  color: #ccc;
+}
+
+.otp-info {
+  background: #e3f2fd;
+  border-left: 4px solid #2196F3;
+  padding: 18px 10px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.otp-info p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.otp-info .info-text {
+  color: #666;
+  font-size: 12px;
+}
+
+.otp-input {
+  text-align: center;
+  font-size: 26px;
+  letter-spacing: 10px;
+  font-weight: bold;
+  padding: 8px 0;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Material icon styling */
+mat-icon {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .login-container {
+    max-width: 100vw;
+    margin: 0;
+    padding: 0 0 24px 0;
+    min-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .login-header h1 {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+  .login-header p {
+    font-size: 13px;
+  }
+  .login-card, .mode-toggle-card {
+    border-radius: 12px;
+    margin: 0 0 14px 0;
+    box-shadow: 0 1px 6px 0 rgba(0,0,0,0.06);
+    padding: 10px 2px 2px 2px;
+  }
+  .mode-btn {
+    font-size: 15px;
+    padding: 14px 0;
+    border-radius: 10px;
+    min-width: 110px;
+    min-height: 44px;
+  }
+  .full-width-btn {
+    font-size: 15px;
+    padding: 12px !important;
+    border-radius: 10px;
+  }
+  mat-form-field.full-width {
+    margin-bottom: 14px;
+  }
+  .action-buttons {
+    gap: 10px;
+    padding: 10px 0 0 0;
+  }
+  .otp-info {
+    font-size: 14px;
+    padding: 10px 4px;
+    border-radius: 8px;
+  }
+  .otp-input {
+    font-size: 20px;
+    letter-spacing: 7px;
+    padding: 6px 0;
+  }
+}

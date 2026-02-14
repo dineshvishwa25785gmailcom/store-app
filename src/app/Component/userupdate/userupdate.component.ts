@@ -3,7 +3,7 @@ import { MaterialModule } from '../../material.module';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { roles, updateuser, users } from '../../_model/user.model';
+import { Roles, UpdateUser, Users } from '../../_model/user.model';
 import { UserService } from '../../_service/user.service';
 
 @Component({
@@ -15,8 +15,8 @@ import { UserService } from '../../_service/user.service';
 })
 export class UserupdateComponent implements OnInit {
   dialogdata: any;
-  userdata!: users;
-  rolelist!: roles[]
+  userdata!: Users;
+  rolelist!: Roles[]
   type = '';
   _response: any;
   userform:FormGroup;
@@ -34,9 +34,8 @@ export class UserupdateComponent implements OnInit {
     this.loadroles();
     this.dialogdata = this.data;
     this.type = this.dialogdata.type;
-    console.log(this.dialogdata);
     if (this.dialogdata.username !== '') {
-      this.service.GetUserbycode(this.dialogdata.username).subscribe(item => {
+      this.service.getUserByCode(this.dialogdata.username).subscribe(item => {
         this.userdata = item;
 
         this.userform.setValue({ username: this.userdata.username, role: this.userdata.role, status: this.userdata.isactive })
@@ -46,7 +45,7 @@ export class UserupdateComponent implements OnInit {
   }
 
   loadroles() {
-    this.service.Getallroles().subscribe(item => {
+    this.service.getAllRoles().subscribe(item => {
       this.rolelist = item;
     })
   }
@@ -55,13 +54,13 @@ export class UserupdateComponent implements OnInit {
 
   proceedchange() {
     if (this.userform.valid) {
-      let _obj: updateuser = {
+      let _obj: UpdateUser = {
         username: this.dialogdata.username,
         role: this.userform.value.role as string,
         status:this.userform.value.status as boolean
       }
       if (this.type === 'role') {
-        this.service.Updaterole(_obj).subscribe(item => {
+        this.service.updateRole(_obj).subscribe(item => {
           this._response=item;
           if (this._response.result == 'pass') {
             this.toastr.success('Updated successfully', 'Role Update');
@@ -71,7 +70,7 @@ export class UserupdateComponent implements OnInit {
           }
         })
       }else{
-        this.service.Updatestatus(_obj).subscribe(item => {
+        this.service.updateStatus(_obj).subscribe(item => {
           this._response=item;
           if (this._response.result == 'pass') {
             this.toastr.success('Updated successfully', 'Status Update');

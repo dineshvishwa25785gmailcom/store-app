@@ -38,13 +38,10 @@
             <ng-container matColumnDef="action">
                 <th mat-header-cell *matHeaderCellDef>Action</th>
                 <td mat-cell *matCellDef="let element">
-                    @if(element.role!=='admin'){
-                    <button (click)="updaterole(element.username)" mat-raised-button color="primary">Update
-                        Role</button>
-                    <button (click)="updatestatus(element.username)" mat-raised-button color="primary">Update
-                        Status</button>
-                    }
-
+                    <ng-container *ngIf="element.role !== 'admin'">
+                      <button (click)="updaterole(element.username)" mat-raised-button color="primary">Update Role</button>
+                      <button (click)="updatestatus(element.username)" mat-raised-button color="primary">Update Status</button>
+                    </ng-container>
                 </td>
             </ng-container>
             <tr class="table-header" mat-header-row *matHeaderRowDef="displayedColumns"></tr>

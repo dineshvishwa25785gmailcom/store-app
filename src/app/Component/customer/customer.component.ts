@@ -1,14 +1,17 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { MaterialModule } from '../../material.module';
 import { Router, RouterLink } from '@angular/router';
 import { customer } from '../../_model/customer.model';
 import { UserService } from '../../_service/user.service';
 import { CustomerService } from '../../_service/customer.service';
+import { AuthService } from '../../_service/authentication.service';
 import { MatTableDataSource } from '@angular/material/table';
-import { menupermission } from '../../_model/user.model';
+import { MenuPermission } from '../../_model/user.model';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { ToastrService } from 'ngx-toastr';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-customer',
@@ -17,7 +20,7 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './customer.component.html',
   styleUrls: ['./customer.component.css'],
 })
-export class CustomerComponent {
+export class CustomerComponent implements OnInit, OnDestroy {
   customerlist!: customer[];
   displayedColumns: string[] = [
     'name',
@@ -29,8 +32,9 @@ export class CustomerComponent {
   ];
   datasource = new MatTableDataSource<customer>();
   _response: any;
+  private destroy$ = new Subject<void>();
 
-  _permission: menupermission = {
+  _permission: MenuPermission = {
     code: '',
     name: '',
     haveview: false,
@@ -49,12 +53,18 @@ export class CustomerComponent {
     private userservice: UserService,
     private toastr: ToastrService,
     private router: Router
+    , private authService: AuthService
   ) {
     // Constructor logic here if needed
   }
   ngOnInit(): void {
-    this.Setaccess();
-    this.LoadCustomer();
+    this.loadAccess();
+    this.loadCustomer();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   applyFilter(event: Event) {
@@ -70,52 +80,51 @@ export class CustomerComponent {
     return this.customerlist?.filter(c => !c.isActive)?.length || 0;
   }
 
-  Setaccess() {
-    let role = localStorage.getItem('userrole') as string;
-    this.userservice.Getmenupermission(role, 'customer').subscribe((item) => {
-      this._permission = item;
-      console.log(this._permission);
-    });
+  loadAccess(): void {
+    const role = this.authService.getUserRole() as string;
+    if (!role) {
+      return;
+    }
+    this.userservice.getMenuPermission(role, 'customer')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((item) => {
+        this._permission = item;
+      });
   }
 
-  LoadCustomer() {
-    this.service.Getall().subscribe((item) => {
-      this.customerlist = item;
-      this.datasource = new MatTableDataSource<customer>(this.customerlist);
-      this.datasource.paginator = this.paginator;
-      this.datasource.sort = this.sort;
-      console.log(this.customerlist);
-
-      // console.log(this.customerlist);
-      // Perform any additional operations with the customer list if needed
-    });
+  loadCustomer(): void {
+    this.service.Getall()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((item) => {
+        this.customerlist = item;
+        this.datasource = new MatTableDataSource<customer>(this.customerlist);
+        this.datasource.paginator = this.paginator;
+        this.datasource.sort = this.sort;
+      });
   }
 
-  functionedit(uniqueKeyID: string) {
+  functionEdit(uniqueKeyID: string): void {
     if (this._permission.haveedit) {
-      console.log('API 1:'); // 👈 This logs the full response
-console.log(uniqueKeyID); // 👈 This logs the full response
-
-
-
       this.router.navigateByUrl('/customer/edit/' + uniqueKeyID);
     } else {
       this.toastr.warning('User not having edit access', 'warning');
     }
   }
 
-  functiondelete(uniqueKeyID: string) {
+  functionDelete(uniqueKeyID: string): void {
     if (this._permission.havedelete) {
       if (confirm('Are you sure?')) {
-        this.service.Deletecustomer(uniqueKeyID).subscribe((item) => {
-          this._response = item;
-          if (this._response.result === 'pass') {
-            this.toastr.success('Deleted successfully', 'Success');
-            this.LoadCustomer();
-          } else {
-            this.toastr.error('Due to:' + this._response.message, 'Failed');
-          }
-        });
+        this.service.Deletecustomer(uniqueKeyID)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe((item) => {
+            this._response = item;
+            if (this._response.result === 'pass') {
+              this.toastr.success('Deleted successfully', 'Success');
+              this.loadCustomer();
+            } else {
+              this.toastr.error('Due to:' + this._response.message, 'Failed');
+            }
+          });
       }
     } else {
       this.toastr.warning('User not having delete access', 'warning');

@@ -1,35 +1,219 @@
+<div class="login-container">
+  <!-- Header -->
+  <div class="login-header">
+    <h1>Welcome Back</h1>
+    <p>Choose your preferred login method</p>
+  </div>
 
-<form [formGroup]="_loginform" (ngSubmit)="proceedlogin()">
-    <mat-card>
-        <mat-card-header>
-          <h1>User Login</h1>
-        </mat-card-header>
-        <mat-card-content>
+  <!-- Login Mode Toggle -->
+  <mat-card class="mode-toggle-card">
+    <mat-card-content>
+      <div class="mode-toggle">
+        <button 
+          mat-button 
+          [class.active]="loginMode === 'password'"
+          (click)="switchLoginMode('password')"
+          class="mode-btn">
+          🔐 Password Login
+        </button>
+        <button 
+          mat-button 
+          [class.active]="loginMode === 'otp'"
+          (click)="switchLoginMode('otp')"
+          class="mode-btn">
+          📧 OTP Login
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
 
-            <mat-form-field>
-                <mat-label>Username</mat-label>
-                <input formControlName="username" matInput />
-            </mat-form-field>
+  <!-- PASSWORD LOGIN MODE -->
+  <mat-card *ngIf="loginMode === 'password'" class="login-card">
+    <mat-card-header>
+      <mat-card-title>Password Login</mat-card-title>
+      <mat-card-subtitle>Sign in with your username and password</mat-card-subtitle>
+    </mat-card-header>
 
-            <mat-form-field >
-                <mat-label>Password</mat-label>
-                <input formControlName="password" type="password" matInput />
-            </mat-form-field>
-            
-        </mat-card-content>
-        <mat-card-actions>
-            <div class="div-50">
-                <button type="submit" mat-raised-button color="primary">Login</button>
-            </div>
-            <div class="div-50">
-                <a routerLink="/register" mat-raised-button color="accent">Sign Up</a>
-            </div>
-            
+    <form [formGroup]="_loginForm" (ngSubmit)="proceedLogin()">
+      <mat-card-content>
+        <!-- Username/Email Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Username or Email</mat-label>
+          <input 
+            matInput 
+            formControlName="username"
+            type="text"
+            placeholder="Username or email" />
+          <mat-error *ngIf="_loginForm.get('username')?.hasError('required')">
+            Username or email is required
+          </mat-error>
+        </mat-form-field>
 
-        </mat-card-actions>
-        <div class="div-50">
-            <a mat-button color="primary" routerLink="/forgetpassword">Forget password</a>
+        <!-- Password Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input 
+            matInput 
+            formControlName="password"
+            [type]="showPassword ? 'text' : 'password'"
+            placeholder="Enter your password" />
+          <button 
+            mat-icon-button 
+            matSuffix 
+            (click)="togglePasswordVisibility()" 
+            type="button">
+            <mat-icon>{{ showPassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="_loginForm.get('password')?.hasError('required')">
+            Password is required
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Remember Me Checkbox -->
+        <mat-checkbox formControlName="rememberMe" class="remember-me">
+          Remember me
+        </mat-checkbox>
+      </mat-card-content>
+
+      <mat-card-actions class="action-buttons">
+        <button 
+          type="submit" 
+          mat-raised-button 
+          color="primary"
+          [disabled]="isLoading || _loginForm.invalid"
+          class="full-width-btn">
+          <mat-icon *ngIf="isLoading" class="spinner">hourglass_empty</mat-icon>
+          <span *ngIf="!isLoading">Login</span>
+          <span *ngIf="isLoading">Logging in...</span>
+        </button>
+      </mat-card-actions>
+
+      <mat-card-footer class="footer-links">
+        <a mat-button color="primary" routerLink="/forgetpassword">
+          Forgot Password?
+        </a>
+        <span class="divider">|</span>
+        <a mat-button color="accent" routerLink="/register">
+          Create Account
+        </a>
+      </mat-card-footer>
+    </form>
+  </mat-card>
+
+  <!-- OTP LOGIN MODE -->
+  <mat-card *ngIf="loginMode === 'otp'" class="login-card">
+    <mat-card-header>
+      <mat-card-title>OTP Login</mat-card-title>
+      <mat-card-subtitle>Verify your email with a one-time password</mat-card-subtitle>
+    </mat-card-header>
+
+    <form [formGroup]="_otpLoginForm">
+      <mat-card-content>
+        <!-- Email Field (Step 1) -->
+        <mat-form-field appearance="outline" class="full-width" *ngIf="!otpSent">
+          <mat-label>Email Address</mat-label>
+          <input 
+            matInput 
+            formControlName="email"
+            type="email"
+            placeholder="example@email.com" />
+          <mat-error *ngIf="_otpLoginForm.get('email')?.hasError('required')">
+            Email is required
+          </mat-error>
+          <mat-error *ngIf="_otpLoginForm.get('email')?.hasError('email')">
+            Please enter a valid email address
+          </mat-error>
+        </mat-form-field>
+
+        <!-- OTP Display Message (Step 2) -->
+        <div *ngIf="otpSent" class="otp-info">
+          <mat-icon class="info-icon">mail</mat-icon>
+          <p>OTP has been sent to <strong>{{ _otpLoginForm.get('email')?.value }}</strong></p>
+          <p class="info-text">Please check your email for the 6-digit code</p>
         </div>
-    </mat-card>
 
-</form>
+        <!-- OTP Input Field (Step 2) -->
+        <mat-form-field appearance="outline" class="full-width" *ngIf="otpSent">
+          <mat-label>Enter OTP Code</mat-label>
+          <input 
+            matInput 
+            formControlName="otp"
+            type="text"
+            maxlength="6"
+            placeholder="000000"
+            class="otp-input"
+            pattern="[0-9]*"
+            inputmode="numeric"
+            (input)="onOtpInput($event)" />
+          <mat-error *ngIf="_otpLoginForm.get('otp')?.hasError('required')">
+            OTP code is required
+          </mat-error>
+          <mat-error *ngIf="_otpLoginForm.get('otp')?.hasError('minlength')">
+            OTP must be 6 digits
+          </mat-error>
+          <mat-error *ngIf="otpErrorMessage">{{ otpErrorMessage }}</mat-error>
+        </mat-form-field>
+      </mat-card-content>
+
+      <mat-card-actions class="action-buttons">
+        <!-- Step 1: Request OTP -->
+        <button 
+          *ngIf="!otpSent"
+          type="button"
+          (click)="requestLoginOtp()" 
+          mat-raised-button 
+          color="primary"
+          [disabled]="isLoading || _otpLoginForm.get('email')?.invalid || otpCooldown"
+          class="full-width-btn">
+          <mat-icon *ngIf="isLoading" class="spinner">hourglass_empty</mat-icon>
+          <span *ngIf="!isLoading && !otpCooldown">Request OTP</span>
+          <span *ngIf="isLoading">Sending...</span>
+          <span *ngIf="otpCooldown && !isLoading">Wait {{ otpCooldownSeconds }}s</span>
+        </button>
+
+        <!-- Step 2: Verify OTP -->
+        <button 
+          *ngIf="otpSent"
+          type="button"
+          (click)="verifyOtpLogin()" 
+          mat-raised-button 
+          color="primary"
+          [disabled]="otpVerifyLoading || _otpLoginForm.get('otp')?.invalid"
+          class="full-width-btn">
+          <mat-icon *ngIf="otpVerifyLoading" class="spinner">hourglass_empty</mat-icon>
+          <span *ngIf="!otpVerifyLoading">Verify OTP</span>
+          <span *ngIf="otpVerifyLoading">Verifying...</span>
+        </button>
+
+        <!-- Resend OTP Button -->
+        <button 
+          *ngIf="otpSent"
+          type="button"
+          (click)="requestLoginOtp()" 
+          mat-button
+          color="accent"
+          class="full-width-btn"
+          [disabled]="otpCooldown">
+          <span *ngIf="!otpCooldown">Resend OTP</span>
+          <span *ngIf="otpCooldown">Wait {{ otpCooldownSeconds }}s</span>
+        </button>
+
+        <!-- Switch to Password Mode -->
+        <button 
+          type="button"
+          (click)="switchLoginMode('password')" 
+          mat-button
+          color="accent"
+          class="full-width-btn">
+          Use Password Instead
+        </button>
+      </mat-card-actions>
+
+      <mat-card-footer class="footer-links">
+        <a mat-button color="primary" routerLink="/register">
+          New to Store? Create Account
+        </a>
+      </mat-card-footer>
+    </form>
+  </mat-card>
+</div>

@@ -5,10 +5,11 @@ import { LoginComponent } from './Component/login/login.component';
 import { ConfirmotpComponent } from './Component/confirmotp/confirmotp.component';
 import { ForgetpasswordComponent } from './Component/forgetpassword/forgetpassword.component';
 import { UpdatepasswordComponent } from './Component/updatepassword/updatepassword.component';
-import { ResetpasswordComponent } from './Component/resetpassword/resetpassword.component';
+import { ProfileComponent } from './Component/profile/profile.component';
 import { CustomerComponent } from './Component/customer/customer.component';
 import { UserComponent } from './Component/user/user.component';
 import { authGuard } from './_guard/auth.guard';
+import { superAdminGuard } from './_guard/super-admin.guard';
 import { AddcustomerComponent } from './Component/addcustomer/addcustomer.component';
 import { UserroleComponent } from './Component/userrole/userrole.component';
 import { CreateinvoiceComponent } from './Component/createinvoice/createinvoice.component';
@@ -19,7 +20,7 @@ import { UITestRunnerComponent } from './Component/ui-test-runner/ui-test-runner
 import { CategoryComponent } from './Component/category/category.component';
 import { ProductComponent } from './Component/product/product.component';
 import { QuickInvoiceComponent } from './Component/quick-invoice/quick-invoice.component';
- 
+
 export const routes: Routes = [
   {
     path: '',
@@ -29,6 +30,7 @@ export const routes: Routes = [
   {
     path: 'home',
     component: HomeComponent,
+    canActivate: [authGuard],
   },
   {
     path: 'register',
@@ -37,8 +39,8 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'confirmotp', component: ConfirmotpComponent },
   { path: 'forgetpassword', component: ForgetpasswordComponent },
-  { path: 'updatepassword', component: UpdatepasswordComponent },
-  { path: 'resetpassword', component: ResetpasswordComponent },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
+  { path: 'updatepassword', component: UpdatepasswordComponent, canActivate: [authGuard] },
   { path: 'customer', component: CustomerComponent, canActivate: [authGuard] },
   {
     path: 'customer/add',
@@ -50,8 +52,8 @@ export const routes: Routes = [
     component: AddcustomerComponent,
     canActivate: [authGuard],
   },
-  { path: 'user', component: UserComponent, canActivate: [authGuard] },
-  { path: 'userrole', component: UserroleComponent, canActivate: [authGuard] },
+  { path: 'user', component: UserComponent, canActivate: [superAdminGuard] },
+  { path: 'userrole', component: UserroleComponent, canActivate: [superAdminGuard] },
   { path: 'createinvoice', component: CreateinvoiceComponent, canActivate: [authGuard] },
   { path: 'editinvoice/:invoiceno', component: CreateinvoiceComponent, canActivate: [authGuard] },
   { path: 'listinvoice', component: ListinvoiceComponent, canActivate: [authGuard] },
@@ -60,7 +62,6 @@ export const routes: Routes = [
   { path: 'productcategory', component: CategoryComponent, canActivate: [authGuard] },
   { path: 'product', component: ProductComponent, canActivate: [authGuard] },
   { path: 'productdetails', component: ProductComponent, canActivate: [authGuard] },
-  { path: 'quick-invoice', component: QuickInvoiceComponent },
   { path: 'test-invoices', component: TestInvoiceGeneratorComponent, canActivate: [authGuard] },
   { path: 'ui-test', component: UITestRunnerComponent, canActivate: [authGuard] },
 ];

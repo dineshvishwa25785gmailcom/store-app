@@ -83,6 +83,9 @@
             },
             "development": {
               "buildTarget": "store-app:build:development"
+            },
+            "local": {
+              "buildTarget": "store-app:build:development"
             }
           },
           "defaultConfiguration": "development"

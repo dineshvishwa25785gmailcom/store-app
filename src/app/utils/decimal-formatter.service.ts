@@ -17,38 +17,38 @@ export class DecimalFormatterService {
   // Function to restrict input to 3 decimal places in real-time
   restrictDecimals(event: any) {
     let value = event.target.value;
-  
-    // Remove any non-numeric characters except ONE decimal point
-    event.target.value = value.replace(/[^0-9.]/g, '');
-  
-    // Prevent multiple decimal points
-    if ((event.target.value.match(/\./g) || []).length > 1) {
-      event.target.value = event.target.value.replace(/(\..*?)\..*/g, '$1'); // Allows only ONE dot
-      return;
+    
+    // Allow numbers and one decimal point only
+    value = value.replace(/[^0-9.]/g, '');
+    
+    // Remove extra decimal points (keep only the first one)
+    const parts = value.split('.');
+    if (parts.length > 2) {
+      value = parts[0] + '.' + parts.slice(1).join('');
     }
-  
-    // Restrict to 3 decimal places
-    if (event.target.value.includes('.')) {
-      const [integerPart, decimalPart] = event.target.value.split('.');
-      if (decimalPart?.length > 3) {
-        event.target.value = `${integerPart}.${decimalPart.substring(0, 3)}`;
+    
+    // Limit to 3 decimal places
+    if (value.includes('.')) {
+      const [integerPart, decimalPart] = value.split('.');
+      if (decimalPart.length > 3) {
+        value = integerPart + '.' + decimalPart.substring(0, 3);
       }
     }
+    
+    event.target.value = value;
   }
 
   // NEW FUNCTION: Handle when user leaves the input field
   formatOnBlur(event: any) {
     let value = event.target.value.trim();
-    console.log("Before formatting:", value);  // Debugging line
-  
-    if (!isNaN(parseFloat(value))) {
-      if (value.endsWith('.')) {
-        event.target.value = value + '000';
-      } else {
-        event.target.value = parseFloat(value).toFixed(3);
-      }
+    
+    if (!value) return; // Don't format if empty
+    
+    // Convert to number and back to remove extra zeros
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      event.target.value = numValue.toString();
     }
-    console.log("After formatting:", event.target.value);  // Debugging line
   }
   
 }

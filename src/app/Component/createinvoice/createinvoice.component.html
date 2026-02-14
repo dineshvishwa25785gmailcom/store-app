@@ -116,15 +116,13 @@
                                 </td>
                                 <td>
                                     <mat-form-field appearance="outline" class="number-field">
-                                        <input matInput type="number" (change)="Itemcalculation(i)" formControlName="quantity"
-                                            (input)="decimalFormatter.restrictDecimals($event)"
-                                            (blur)="decimalFormatter.formatOnBlur($event)" required>
+                                        <input matInput type="number" step="0.001" (change)="Itemcalculation(i)" formControlName="quantity" required>
                                         <mat-error *ngIf="item.get('quantity')?.hasError('required')">Quantity is required</mat-error>
                                     </mat-form-field>
                                 </td>
                                 <td>
                                     <mat-form-field appearance="outline" class="number-field">
-                                        <input matInput type="number" (change)="Itemcalculation(i)" formControlName="rateWithTax" required>
+                                        <input matInput type="number" step="0.01" (change)="Itemcalculation(i)" formControlName="rateWithTax" required>
                                         <mat-error *ngIf="item.get('rateWithTax')?.hasError('required')">Rate is required</mat-error>
                                     </mat-form-field>
                                 </td>

@@ -1,4 +1,4 @@
 export const environment = {
-    production: true,
-    apiUrl: 'https://store-app-api-dinesh-gjexddd0grcpbsf8.canadacentral-01.azurewebsites.net/api/'
+    production: false,
+    apiUrl: 'https://localhost:7238/api/'
 };

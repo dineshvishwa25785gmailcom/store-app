@@ -9,7 +9,7 @@ import {
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from '../../_service/user.service';
-import { menupermission, menus, roles, TblRolepermission } from '../../_model/user.model';
+import { MenuPermission, Menus, Roles, TblRolePermission } from '../../_model/user.model';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -20,10 +20,10 @@ import { CommonModule } from '@angular/common';
   styleUrl: './userrole.component.css',
 })
 export class UserroleComponent implements OnInit {
-  rolelist!: roles[];
-  menulist!: menus[];
+  rolelist!: Roles[];
+  menulist!: Menus[];
   accessarray!: FormArray<any>;
-  useraccess!: menupermission;
+  useraccess!: MenuPermission;
   _response: any;
   roleform: FormGroup;
   constructor(
@@ -41,7 +41,7 @@ export class UserroleComponent implements OnInit {
     this.loadmenus('');
   }
 
-  Generatemenurow(input: menus, _access: menupermission, role: string) {
+  Generatemenurow(input: Menus, _access: MenuPermission, role: string) {
     return this.builder.group({
       menucode: this.builder.control(input.code),
       haveview: this.builder.control(_access.haveview),
@@ -52,7 +52,7 @@ export class UserroleComponent implements OnInit {
     });
   }
 
-  Addnewrow(input: menus, _access: menupermission, role: string) {
+  Addnewrow(input: Menus, _access: MenuPermission, role: string) {
     this.accessarray.push(this.Generatemenurow(input, _access, role));
   }
 
@@ -61,7 +61,7 @@ export class UserroleComponent implements OnInit {
   }
 
   loadroles() {
-    this.service.Getallroles().subscribe((item) => {
+    this.service.getAllRoles().subscribe((item) => {
       this.rolelist = item;
     });
   }
@@ -69,13 +69,13 @@ export class UserroleComponent implements OnInit {
   loadmenus(userrole: string) {
     this.accessarray = this.roleform.get('access') as FormArray;
     this.accessarray.clear();
-    this.service.Getallmenus().subscribe((item) => {
+    this.service.getAllMenus().subscribe((item) => {
       this.menulist = item;
       if (this.menulist.length > 0) {
-        this.menulist.map((o: menus) => {
+        this.menulist.map((o: Menus) => {
           if (userrole != '') {
             this.service
-              .Getmenupermission(userrole, o.code)
+              .getMenuPermission(userrole, o.code)
               .subscribe((item) => {
                 this.useraccess = item;
                 this.Addnewrow(o, this.useraccess, userrole);
@@ -108,10 +108,10 @@ export class UserroleComponent implements OnInit {
 
   Saveroles() {
     if (this.roleform.valid) {
-      let formarry = this.roleform.value.access as TblRolepermission[];
+      let formarry = this.roleform.value.access as TblRolePermission[];
       // Add id property to each item
       formarry = formarry.map((item, index) => ({ ...item, id: index + 1 }));
-      this.service.Assignrolepermission(formarry).subscribe((item) => {
+      this.service.assignRolePermission(formarry).subscribe((item) => {
         this._response = item;
         if (this._response.result == 'pass') {
           this.toastr.success('Permission assigned successfully', 'Saved');

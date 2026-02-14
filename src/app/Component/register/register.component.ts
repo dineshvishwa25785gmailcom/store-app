@@ -1,74 +1,234 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MaterialModule } from '../../material.module';
 import { Router, RouterLink } from '@angular/router';
-import { registerconfirm, userregister } from '../../_model/user.model';
+
+import { ConfirmRegistration } from '../../_model/user.model';
 import { UserService } from '../../_service/user.service';
+import { AuthService } from '../../_service/authentication.service';
+import { LoggerService } from '../../_service/logger.service';
 import { ToastrService } from 'ngx-toastr';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, MaterialModule, RouterLink],
+  imports: [ReactiveFormsModule, MaterialModule, RouterLink, CommonModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
-export class RegisterComponent {
-
+export class RegisterComponent implements OnInit {
+  // Forms
+  _emailForm!: FormGroup; // Step 1: Email only
+  _otpForm!: FormGroup;   // Step 2: OTP verification
+  
+  // State variables
+  currentStep: 'email' | 'otp' = 'email';
+  isLoading = false;
+  isVerifying = false;
+  userEmail = '';
+  otpMessage = '';
+  
+  // Responses
   _response: any;
-  _regform: FormGroup; // Declare _regform as a class property
+
 
   constructor(
     private builder: FormBuilder,
     private service: UserService,
+    private authService: AuthService,
+    private logger: LoggerService,
     private toastr: ToastrService,
     private router: Router
-  ) {
-    // Initialize _regform in the constructor  
-    this._regform = this.builder.group({
-      username: this.builder.control('', Validators.compose([Validators.required, Validators.minLength(5)])),
-      password: this.builder.control('', Validators.required),
-      confirmpassword: this.builder.control('', Validators.required),
-      name: this.builder.control('', Validators.required),
-      email: this.builder.control('', Validators.required),
-      phone: this.builder.control('', Validators.required)
+  ) {}
+
+  ngOnInit(): void {
+    // Initialize email registration form (Step 1)
+    this._emailForm = this.builder.group({
+      email: ['', [Validators.required, Validators.email]]
+    });
+
+    // Initialize OTP verification form (Step 2)
+    this._otpForm = this.builder.group({
+      otp: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]]
+    });
+
+    this.logger.logComponentLifecycle('RegisterComponent', 'ngOnInit');
+  }
+
+  /**
+   * Step 1: Register with email and request OTP
+   */
+  proceedWithEmail(): void {
+    if (this._emailForm.invalid) {
+      this.toastr.error('Please enter a valid email address', 'Validation Error');
+      this.logger.logFormValidation('RegisterEmailForm', false, this._emailForm.errors);
+      return;
+    }
+
+    this.isLoading = true;
+    this.userEmail = this._emailForm.get('email')?.value;
+    this.logger.info('RegisterComponent', 'Proceeding with email registration', { email: this.userEmail });
+
+    // Call initial registration endpoint
+    this.service.initialRegistration({ email: this.userEmail }).subscribe({
+      next: (response: any) => {
+        this.isLoading = false;
+        this.logger.logApiResponse('POST', '/api/User/initialRegistration', 200, response);
+        if (response?.result === 'pass') {
+          // Store email for later use
+          this.authService.setUserEmail(this.userEmail);
+          this.logger.logAuthEvent('Registration OTP sent', { email: this.userEmail });
+          // Move to OTP verification step
+          this.currentStep = 'otp';
+          this.otpMessage = `OTP has been sent to ${this.userEmail}`;
+          this.toastr.success('OTP sent to your email. Please check your inbox.', 'Verify Email');
+        } else {
+          this.logger.error('RegisterComponent', 'Registration failed', response);
+          this.toastr.error(response?.message || 'Registration failed', 'Error');
+        }
+      },
+      error: (error: any) => {
+        this.isLoading = false;
+        this.logger.logApiError('POST', '/api/User/initialRegistration', error?.status || 500, error);
+        this.toastr.error('Failed to register. Please try again.', 'Error');
+      }
     });
   }
 
-
-  proceedregister() {
-    if (this._regform.valid) {
-      let _obj: userregister = {
-        userName: this._regform.value.username as string,
-        name: this._regform.value.name as string,
-        phone: this._regform.value.phone as string,
-        email: this._regform.value.email as string,
-        password: this._regform.value.password as string,
-        role: 'string' // Add the role field if required
-      };
-  
-      this.service.Userregisteration(_obj).subscribe(
-        item => {
-          this._response = item;
-          console.log(this._response);
-          if (this._response.result === 'pass') {
-            let _confirmobj: registerconfirm = {
-              userid: this._response.errorMessage,
-              username: _obj.userName,
-              otptext: ''
-            };
-            this.service._registerresp.set(_confirmobj);
-            this.toastr.success('Validate OTP & complete the registration', 'Registration');
-            this.router.navigateByUrl('/confirmotp');
-          } else {
-            this.toastr.error('Failed due to: ' + this._response.message, 'Registration Failed');
-          }
-        },
-        error => {
-          console.error('Error occurred:', error);
-          this.toastr.error('An error occurred while registering the user.', 'Error');
-        }
-      );
+  /**
+   * Step 2: Verify OTP
+   */
+  verifyOtp(): void {
+    if (this._otpForm.invalid) {
+      this.toastr.error('Please enter a valid 6-digit OTP', 'Validation Error');
+      this.logger.logFormValidation('RegisterOtpForm', false, this._otpForm.errors);
+      return;
     }
+
+    this.isVerifying = true;
+    const otp = this._otpForm.get('otp')?.value;
+
+    const confirmData: ConfirmRegistration = {
+      email: this.userEmail,
+      otptext: otp
+    };
+    this.logger.info('RegisterComponent', 'Verifying OTP', confirmData);
+
+    // Call confirm registration endpoint
+    this.service.confirmRegistration(confirmData).subscribe({
+      next: (response) => {
+        this.isVerifying = false;
+        this.logger.logApiResponse('POST', '/api/User/confirmRegistration', 200, response);
+        // Defensive: check for missing/invalid response
+        if (!response || typeof response !== 'object') {
+          this.logger.error('RegisterComponent', 'Unexpected response structure', response);
+          this.toastr.error('Unexpected server response. Please try again later.', 'Error');
+          return;
+        }
+        // Handle edge cases by backend message or result
+        const msg = (response.errorMessage || response.message || '').toLowerCase();
+        if (msg.includes('expired')) {
+          this.logger.warn('RegisterComponent', 'OTP expired', response);
+          this.toastr.error('Your OTP has expired. Please request a new one.', 'OTP Expired');
+          return;
+        }
+        if (msg.includes('already verified')) {
+          this.logger.info('RegisterComponent', 'Account already verified', response);
+          this.toastr.info('Your account is already verified. Please login.', 'Already Verified');
+          this.router.navigateByUrl('/login');
+          return;
+        }
+        if (msg.includes('too many') || msg.includes('attempt')) {
+          this.logger.warn('RegisterComponent', 'Too many OTP attempts', response);
+          this.toastr.error('Too many failed attempts. Please try again later or request a new OTP.', 'Too Many Attempts');
+          return;
+        }
+        if (response?.result === 'pass') {
+          // Store authentication tokens if present
+          if (response?.token) {
+            this.authService.login(response, this.userEmail);
+          }
+          this.logger.logAuthEvent('Registration OTP verified', { email: this.userEmail });
+          this.toastr.success(
+            response?.errorMessage || response?.message || 'Email verified successfully!',
+            'Success'
+          );
+          // Option 1: Navigate to optional password creation
+          // this.router.navigateByUrl('/create-password');
+          // Option 2: Go directly to dashboard
+          this.service.loadMenuByRole(response.userRole).subscribe({
+            next: (menuItems) => {
+              this.logger.info('RegisterComponent', 'Loaded menu by role', { userRole: response.userRole, menuItems });
+              this.router.navigateByUrl('/'); // Navigate to dashboard
+            },
+            error: (err) => {
+              this.logger.warn('RegisterComponent', 'Failed to load menu items after OTP verification', err);
+              this.toastr.warning('Email verified, but failed to load menu items', 'Warning');
+              this.router.navigateByUrl('/');
+            }
+          });
+        } else {
+          this.logger.error('RegisterComponent', 'OTP verification failed', response);
+          this.toastr.error(response?.errorMessage || response?.message || 'OTP verification failed', 'Error');
+        }
+      },
+      error: (error) => {
+        this.isVerifying = false;
+        this.logger.logApiError('POST', '/api/User/confirmRegistration', error?.status || 500, error);
+        // Network/server error handling
+        if (error?.status === 0) {
+          this.toastr.error('Network error. Please check your connection and try again.', 'Network Error');
+        } else if (error?.status >= 500) {
+          this.toastr.error('Server error. Please try again later.', 'Server Error');
+        } else if (error?.status === 400 && error?.error?.message?.toLowerCase().includes('expired')) {
+          this.toastr.error('Your OTP has expired. Please request a new one.', 'OTP Expired');
+        } else if (error?.status === 400 && error?.error?.message?.toLowerCase().includes('already verified')) {
+          this.toastr.info('Your account is already verified. Please login.', 'Already Verified');
+          this.router.navigateByUrl('/login');
+        } else if (error?.status === 429 || (error?.error?.message && error?.error?.message.toLowerCase().includes('too many'))) {
+          this.toastr.error('Too many failed attempts. Please try again later or request a new OTP.', 'Too Many Attempts');
+        } else {
+          this.toastr.error('Failed to verify OTP. Please try again.', 'Error');
+        }
+      }
+    });
+  }
+
+  /**
+   * Resend OTP
+   */
+  resendOtp(): void {
+    this.isLoading = true;
+    this.logger.info('RegisterComponent', 'Resending registration OTP', { email: this.userEmail });
+    this.service.resendRegistrationOtp({ email: this.userEmail }).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        this.logger.logApiResponse('POST', '/api/User/resendRegistrationOtp', 200, response);
+        if (response?.result === 'pass') {
+          this.logger.logAuthEvent('Registration OTP resent', { email: this.userEmail });
+          this.toastr.success('OTP resent to your email', 'OTP Resent');
+          this._otpForm.get('otp')?.reset();
+        } else {
+          this.logger.error('RegisterComponent', 'Failed to resend OTP', response);
+          this.toastr.error(response?.message || 'Failed to resend OTP', 'Error');
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.logger.logApiError('POST', '/api/User/resendRegistrationOtp', error?.status || 500, error);
+        this.toastr.error('Failed to resend OTP', 'Error');
+      }
+    });
+  }
+
+  /**
+   * Go back to email step
+   */
+  goBack(): void {
+    this.logger.debug('RegisterComponent', 'Going back to email step');
+    this.currentStep = 'email';
+    this._otpForm.reset();
+    this.userEmail = '';
   }
 }

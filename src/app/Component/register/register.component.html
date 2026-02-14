@@ -1,49 +1,136 @@
+<div class="register-container">
+  <!-- Header -->
+  <div class="register-header">
+    <h1>Create Your Account</h1>
+    <p>Quick and easy registration process</p>
+  </div>
 
-<form [formGroup]="_regform" (ngSubmit)="proceedregister()">
+  <!-- STEP 1: Email Registration -->
+  <mat-card *ngIf="currentStep === 'email'" class="register-card">
+    <mat-card-header>
+      <mat-card-title>Step 1: Verify Your Email</mat-card-title>
+      <mat-card-subtitle>Enter your email address to get started</mat-card-subtitle>
+    </mat-card-header>
 
-    <mat-card>
-        <mat-card-header>
-          <h1>User Registeration</h1>
-        </mat-card-header>
-        <mat-card-content>
+    <form [formGroup]="_emailForm" (ngSubmit)="proceedWithEmail()">
+      <mat-card-content>
+        <!-- Email Input -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email Address</mat-label>
+          <input 
+            matInput 
+            formControlName="email"
+            type="email"
+            placeholder="example@email.com" />
+          <mat-error *ngIf="_emailForm.get('email')?.hasError('required')">
+            Email is required
+          </mat-error>
+          <mat-error *ngIf="_emailForm.get('email')?.hasError('email')">
+            Please enter a valid email address
+          </mat-error>
+        </mat-form-field>
 
-            <mat-form-field>
-                <mat-label>Username</mat-label>
-                <input formControlName="username" matInput />
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>Name</mat-label>
-                <input formControlName="name" matInput />
-            </mat-form-field>
+        <!-- Information Box -->
+        <mat-card class="info-box">
+          <mat-card-content>
+            <mat-icon class="info-icon">info</mat-icon>
+            <p>We'll send you an OTP code to verify your email address. This ensures your account is secure.</p>
+          </mat-card-content>
+        </mat-card>
+      </mat-card-content>
 
-            <mat-form-field class="mat-50">
-                <mat-label>Password</mat-label>
-                <input formControlName="password" type="password" matInput />
-            </mat-form-field>
-            <mat-form-field class="mat-50">
-                <mat-label>Confirm password</mat-label>
-                <input formControlName="confirmpassword" type="password" matInput />
-            </mat-form-field>
-            <mat-form-field class="mat-50">
-                <mat-label>Email</mat-label>
-                <input formControlName="email" matInput />
-            </mat-form-field >
-            <mat-form-field class="mat-50">
-                <mat-label>Phone</mat-label>
-                <input formControlName="phone" matInput />
-            </mat-form-field>
-            
-        </mat-card-content>
-        <mat-card-actions>
-            <div class="div-50">
-                <button type="submit" mat-raised-button color="primary">Register</button>
-            </div>
-            <div class="div-50">
-                <a routerLink="/login" mat-raised-button color="accent">Back to Login</a>
-            </div>
-            
+      <mat-card-actions class="action-buttons">
+        <button 
+          type="submit" 
+          mat-raised-button 
+          color="primary"
+          [disabled]="isLoading || _emailForm.invalid"
+          class="full-width-btn">
+          <mat-icon *ngIf="isLoading" class="spinner">hourglass_empty</mat-icon>
+          <span *ngIf="!isLoading">Send OTP</span>
+          <span *ngIf="isLoading">Sending...</span>
+        </button>
+      </mat-card-actions>
 
-        </mat-card-actions>
-    </mat-card>
+      <mat-card-footer class="footer-links">
+        <p>Already have an account?</p>
+        <a mat-button color="primary" routerLink="/login">
+          Sign in here
+        </a>
+      </mat-card-footer>
+    </form>
+  </mat-card>
 
-</form>
+  <!-- STEP 2: OTP Verification -->
+  <mat-card *ngIf="currentStep === 'otp'" class="register-card">
+    <mat-card-header>
+      <mat-card-title>Step 2: Verify OTP</mat-card-title>
+      <mat-card-subtitle>Enter the code sent to your email</mat-card-subtitle>
+    </mat-card-header>
+
+    <form [formGroup]="_otpForm" (ngSubmit)="verifyOtp()">
+      <mat-card-content>
+        <!-- OTP Verification Message -->
+        <div class="otp-message">
+          <mat-icon class="message-icon">mail_outline</mat-icon>
+          <p class="message-text">{{ otpMessage }}</p>
+          <p class="message-info">Please check your inbox and spam folder</p>
+        </div>
+
+        <!-- OTP Input -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Enter 6-Digit OTP</mat-label>
+          <input 
+            matInput 
+            formControlName="otp"
+            type="text"
+            maxlength="6"
+            placeholder="000000"
+            class="otp-input" />
+          <mat-error *ngIf="_otpForm.get('otp')?.hasError('required')">
+            OTP code is required
+          </mat-error>
+          <mat-error *ngIf="_otpForm.get('otp')?.hasError('minlength')">
+            OTP must be 6 digits
+          </mat-error>
+        </mat-form-field>
+      </mat-card-content>
+
+      <mat-card-actions class="action-buttons">
+        <!-- Verify Button -->
+        <button 
+          type="submit" 
+          mat-raised-button 
+          color="primary"
+          [disabled]="isVerifying || _otpForm.invalid"
+          class="full-width-btn">
+          <mat-icon *ngIf="isVerifying" class="spinner">hourglass_empty</mat-icon>
+          <span *ngIf="!isVerifying">Verify & Complete Registration</span>
+          <span *ngIf="isVerifying">Verifying...</span>
+        </button>
+
+        <!-- Resend OTP Button -->
+        <button 
+          type="button"
+          (click)="resendOtp()"
+          mat-button
+          color="accent"
+          [disabled]="isLoading"
+          class="full-width-btn">
+          <span *ngIf="!isLoading">Resend OTP</span>
+          <span *ngIf="isLoading">Resending...</span>
+        </button>
+      </mat-card-actions>
+
+      <mat-card-footer class="footer-links">
+        <button 
+          type="button"
+          mat-button 
+          color="primary"
+          (click)="goBack()">
+          ← Back to Email
+        </button>
+      </mat-card-footer>
+    </form>
+  </mat-card>
+</div>

@@ -1,56 +1,124 @@
-export interface userregister {
+// DTO for login with email and password (matches backend)
+export interface LoginWithPasswordRequest {
+  identifier: string; // username or email
+  password: string;
+}
+// ========== REGISTRATION FLOW ==========
+export interface InitialRegistration {
+  email: string;
+}
+
+export interface RequestLoginOtp {
+  email: string;
+}
+
+export interface ConfirmRegistration {
+  email: string;
+  otptext: string;
+}
+
+export interface ResendRegistrationOtp {
+  email: string;
+}
+
+export interface UserRegister {
   userName: string;
   name: string;
   phone: string;
   email: string;
   password: string;
-  role: string; // Add the role field if required
+  role: string;
 }
 
-export interface registerconfirm {
+export interface RegisterConfirm {
   userid: number;
   username: string;
   otptext: string;
 }
 
-export interface usercred {
-  userName: string;
+// ========== LOGIN FLOW ==========
+export interface UserCredentials {
+  Email: string;
   password: string;
 }
-export interface loginresp {
+
+export interface VerifyLoginOtp {
+  email: string;
+  otptext: string;
+}
+
+export interface LoginResponse {
   token: string;
   refreshToken: string;
   userRole: string;
+  result?: string;
+  message?: string;
+  errorMessage?: string;
 }
 
-export interface menu {
-  menucode: string;
-  menuname: string;
+// ========== PASSWORD MANAGEMENT ==========
+export interface CreatePassword {
+  newPassword: string;
+  confirmPassword: string;
 }
-export interface resetpassword {
+
+export interface RequestForgotPasswordOtp {
+  email: string;
+}
+
+export interface ResetPasswordWithOtp {
+  email: string;
+  otp: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ResetPassword {
   username: string;
   oldpassword: string;
   newpassword: string;
 }
 
-export interface updatepassword {
+export interface ResetPasswordWithOldPassword {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface UpdatePassword {
   username: string;
   password: string;
   otptext: string;
 }
 
-export interface menupermission {
-    userrole:string;
-    code: string;
-    menucode:string;
-    name: string;
-    haveview: boolean,
-    haveadd: boolean,
-    haveedit: boolean,
-    havedelete: boolean,
+// ========== PROFILE & ROLE ==========
+export interface UpdateUserProfile {
+  name: string;
+  phone: string;
+  address: string;
 }
 
-export interface users {
+export interface UpdateUserRole {
+  username: string;
+  role: string;
+}
+
+export interface Menu {
+  menucode: string;
+  menuname: string;
+}
+
+export interface MenuPermission {
+  userrole: string;
+  code: string;
+  menucode: string;
+  name: string;
+  haveview: boolean;
+  haveadd: boolean;
+  haveedit: boolean;
+  havedelete: boolean;
+}
+
+export interface Users {
   username: string;
   name: string;
   email: string;
@@ -60,12 +128,13 @@ export interface users {
   role: string;
 }
 
-export interface roles {
-  code: string
-  name: string
-  status: boolean
+export interface Roles {
+  code: string;
+  name: string;
+  status: boolean;
 }
-export interface updateuser {
+
+export interface UpdateUser {
   username: string;
   role: string;
   status: boolean;
@@ -76,12 +145,12 @@ export interface UpdateRole {
   role: string | null;
 }
 
-export interface Updatestatus {
+export interface UpdateStatus {
   username: string | null;
   status: boolean;
 }
 
-export interface TblRolepermission {
+export interface TblRolePermission {
   id: number;
   userrole: string | null;
   menucode: string | null;
@@ -91,8 +160,16 @@ export interface TblRolepermission {
   havedelete: boolean;
 }
 
-export interface menus {
-  code: string
-  name: string
-  status: boolean
+export interface Menus {
+  code: string;
+  name: string;
+  status: boolean;
+}
+
+// ========== API RESPONSE ==========
+export interface ApiResponse<T = any> {
+  result: string;
+  message?: string;
+  errorMessage?: string;
+  data?: T;
 }

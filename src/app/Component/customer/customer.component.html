@@ -8,7 +8,7 @@
     <div class="stat-card">
       <mat-icon>people</mat-icon>
       <div class="stat-content">
-        <h3>{{ customerlist?.length || 0 }}</h3>
+        <h3>{{ customerlist.length || 0 }}</h3>
         <p>Total Customers</p>
       </div>
     </div>
@@ -77,10 +77,10 @@
       <ng-container matColumnDef="action">
         <th mat-header-cell *matHeaderCellDef>Actions</th>
         <td mat-cell *matCellDef="let element">
-          <button mat-icon-button color="primary" (click)="functionedit(element.uniqueKeyID)" matTooltip="Edit">
+          <button mat-icon-button color="primary" (click)="functionEdit(element.uniqueKeyID)" matTooltip="Edit">
             <mat-icon>edit</mat-icon>
           </button>
-          <button mat-icon-button color="warn" (click)="functiondelete(element.uniqueKeyID)" matTooltip="Delete">
+          <button mat-icon-button color="warn" (click)="functionDelete(element.uniqueKeyID)" matTooltip="Delete">
             <mat-icon>delete</mat-icon>
           </button>
         </td>

@@ -1,9 +1,10 @@
-import { Component, DoCheck, OnInit, effect } from '@angular/core';
+import { Component, DoCheck, OnInit, effect, signal } from '@angular/core';
 import { MaterialModule } from '../../material.module';
 import { UserService } from '../../_service/user.service';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
-import { menu } from '../../_model/user.model';
+import { Menu } from '../../_model/user.model';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../_service/authentication.service';
 
 @Component({
   selector: 'app-appmenu',
@@ -13,30 +14,62 @@ import { CommonModule } from '@angular/common';
   styleUrl: './appmenu.component.css',
 })
 export class AppmenuComponent implements OnInit, DoCheck {
-  constructor(private service: UserService, private router: Router) {
+  menulist = signal<Menu[]>([]);
+  Loginuser = '';
+  showmenu = false;
+  isSuperAdmin = false;
+
+  constructor(
+    private service: UserService, 
+    private router: Router,
+    private authService: AuthService
+  ) {
+    // React to authentication state changes
+    // When user logs in or out, reload the menu
     effect(() => {
-      this.menulist = this.service._menulist();
+      const isAuth = this.authService.isAuthenticated$();
+      if (isAuth) {
+        this.loadMenuItems();
+      } else {
+        this.menulist.set([]);
+      }
     });
   }
 
-  menulist!: menu[];
-  Loginuser = '';
-  showmenu = false;
-
   ngOnInit(): void {
-    let userrole = localStorage.getItem('userrole') as string;
-    this.service.Loadmenubyrole(userrole).subscribe((item) => {
-      this.menulist = item;
-    });
+    // Initial menu load if already authenticated
+    if (this.authService.getAuthStatus()) {
+      this.loadMenuItems();
+    }
+  }
+
+  /**
+   * Load menu items based on user role from localStorage
+   */
+  private loadMenuItems(): void {
+    const userrole = this.authService.getUserRole();
+    if (userrole) {
+      this.service.loadMenuByRole(userrole).subscribe({
+        next: (item) => {
+          console.log('AppmenuComponent: Menu items loaded successfully:', item);
+          this.menulist.set(item);
+        },
+        error: (error) => {
+          console.error('AppmenuComponent: Failed to load menu items:', error);
+          this.menulist.set([]);
+        }
+      });
+    }
   }
 
   ngDoCheck(): void {
-    this.Loginuser = localStorage.getItem('username') as string;
+    this.Loginuser = this.authService.getUsername() || '';
+    let userrole = this.authService.getUserRole() || '';
+    this.isSuperAdmin = userrole.toLowerCase() === 'super_admin' || userrole.toLowerCase() === 'superadmin';
     this.Setaccess();
   }
 
   Setaccess() {
-    let userrole = localStorage.getItem('userrole');
     let currentUrl = this.router.url;
     if (
       currentUrl === '/register' ||
@@ -46,7 +79,8 @@ export class AppmenuComponent implements OnInit, DoCheck {
     ) {
       this.showmenu = false;
     } else {
-      this.showmenu = true;
+      // Only show menu when user is authenticated
+      this.showmenu = this.authService.getAuthStatus();
     }
   }
 }

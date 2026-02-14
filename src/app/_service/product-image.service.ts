@@ -16,7 +16,7 @@ export class ProductImageService {
     formData.append('formFile', formFile);
     
     return this.http.put(
-      `${this.baseUrl}Product/UploadImage?productcode=${productcode}`,
+      `${this.baseUrl}UploadImage?productcode=${productcode}`,
       formData
     );
   }
@@ -28,7 +28,7 @@ export class ProductImageService {
     });
     
     return this.http.put(
-      `${this.baseUrl}Product/MultiUploadImage?productcode=${productcode}`,
+      `${this.baseUrl}MultiUploadImage?productcode=${productcode}`,
       formData
     );
   }
@@ -40,53 +40,53 @@ export class ProductImageService {
     });
     
     return this.http.put(
-      `${this.baseUrl}Product/DBMultiUploadImage?productcode=${productcode}`,
+      `${this.baseUrl}DBMultiUploadImage?productcode=${productcode}`,
       formData
     );
   }
 
   getImage(productcode: string): Observable<Blob> {
     return this.http.get(
-      `${this.baseUrl}Product/GetImage?productcode=${productcode}`,
+      `${this.baseUrl}GetImage?productcode=${productcode}`,
       { responseType: 'blob' }
     );
   }
 
   getMultipleImages(productcode: string): Observable<any> {
     return this.http.get(
-      `${this.baseUrl}Product/GetMultiImage?productcode=${productcode}`
+      `${this.baseUrl}GetMultiImage?productcode=${productcode}`
     );
   }
 
   getDbMultipleImages(productcode: string): Observable<any> {
     return this.http.get(
-      `${this.baseUrl}Product/GetDBMultiImage?productcode=${productcode}`
+      `${this.baseUrl}GetDBMultiImage?productcode=${productcode}`
     );
   }
 
   downloadImage(productcode: string): Observable<Blob> {
     return this.http.get(
-      `${this.baseUrl}Product/downloadimage?productcode=${productcode}`,
+      `${this.baseUrl}downloadimage?productcode=${productcode}`,
       { responseType: 'blob' }
     );
   }
 
   downloadDbImage(productcode: string): Observable<Blob> {
     return this.http.get(
-      `${this.baseUrl}Product/dbdownloadimage?productcode=${productcode}`,
+      `${this.baseUrl}dbdownloadimage?productcode=${productcode}`,
       { responseType: 'blob' }
     );
   }
 
   removeImage(productcode: string): Observable<any> {
     return this.http.delete(
-      `${this.baseUrl}Product/removeimage?productcode=${productcode}`
+      `${this.baseUrl}removeimage?productcode=${productcode}`
     );
   }
 
   removeMultipleImages(productcode: string): Observable<any> {
     return this.http.delete(
-      `${this.baseUrl}Product/multiremoveimage?productcode=${productcode}`
+      `${this.baseUrl}multiremoveimage?productcode=${productcode}`
     );
   }
 }

@@ -161,11 +161,6 @@ export class CreateinvoiceComponent implements OnInit {
           // Convert date string to Date object
           const invoiceDate = editdata.invoiceDate ? new Date(editdata.invoiceDate) : null;
           
-          console.log('Loading invoice data:');
-          console.log('Original invoiceDate from API:', editdata.invoiceDate);
-          console.log('Converted to Date object:', invoiceDate);
-          console.log('Is Date:', invoiceDate instanceof Date);
-          
           this.invoiceform.patchValue({
             invoiceYear: editdata.invoiceYear || '',
             invoiceNumber: editdata.displayInvNumber || '',
@@ -181,9 +176,6 @@ export class CreateinvoiceComponent implements OnInit {
           
           // Also set the ngModel binding
           this.selectedInvoiceDate = invoiceDate;
-          
-          console.log('Form invoiceDate after patch:', this.invoiceform.get('invoiceDate')?.value);
-          console.log('selectedInvoiceDate:', this.selectedInvoiceDate);
           
           this.editinvoiceno = editdata.invoiceNumber;
           this.cdr.detectChanges();
@@ -287,14 +279,6 @@ export class CreateinvoiceComponent implements OnInit {
     // Get the current date value from the form control
     const currentDateValue = this.invoiceform.get('invoiceDate')?.value;
     
-    console.log('=== SAVE INVOICE DEBUG ===');
-    console.log('Form invoiceDate before transform:', formData.invoiceDate);
-    console.log('Direct form control value:', currentDateValue);
-    console.log('invoiceDate type:', typeof formData.invoiceDate);
-    console.log('invoiceDate instanceof Date:', formData.invoiceDate instanceof Date);
-    console.log('Form dirty:', this.invoiceform.get('invoiceDate')?.dirty);
-    console.log('Form touched:', this.invoiceform.get('invoiceDate')?.touched);
-    console.log('=========================');
     
     // Override formData.invoiceDate with the direct control value to ensure we get the latest
     formData.invoiceDate = currentDateValue;

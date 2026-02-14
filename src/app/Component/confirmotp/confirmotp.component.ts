@@ -1,49 +1,219 @@
 import { Component, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MaterialModule } from '../../material.module';
 import { ToastrService } from 'ngx-toastr';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
+
 import { UserService } from '../../_service/user.service';
-import { registerconfirm } from '../../_model/user.model';
+import { AuthService } from '../../_service/authentication.service';
+import { LoggerService } from '../../_service/logger.service';
+import { RegisterConfirm, CreatePassword } from '../../_model/user.model';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-confirmotp',
   standalone: true,
-  imports: [FormsModule, MaterialModule,RouterLink],
+  imports: [FormsModule, MaterialModule, ReactiveFormsModule, CommonModule],
   templateUrl: './confirmotp.component.html',
   styleUrl: './confirmotp.component.css'
 })
 export class ConfirmotpComponent implements OnInit {
-
-  otptext = ''
-  regresponse!: registerconfirm;
+  // Legacy support
+  otptext = '';
+  regresponse!: RegisterConfirm;
   _response: any;
 
-  constructor(private toastr: ToastrService, private router: Router, private service: UserService) {
+  // New password creation form
+  passwordForm!: FormGroup;
+  userEmail = '';
+  isCreatingPassword = false;
+  showPassword = false;
+  showConfirmPassword = false;
+  passwordStrength = '';
 
-  }
+
+  constructor(
+    private toastr: ToastrService,
+    private router: Router,
+    private service: UserService,
+    private authService: AuthService,
+    private logger: LoggerService,
+    private builder: FormBuilder
+  ) {}
+
   ngOnInit(): void {
-    this.regresponse = this.service._registerresp();
+    // this.regresponse = this.service._registerresp(); // Removed: _registerresp does not exist on UserService
+    this.userEmail = this.authService.getUserEmail();
+
+    // Initialize password creation form
+    this.passwordForm = this.builder.group({
+      newPassword: ['', [Validators.required, Validators.minLength(8)]],
+      confirmPassword: ['', [Validators.required]],
+      agreeTerms: [false, Validators.requiredTrue]
+    }, { validators: this.passwordMatchValidator });
+
+    this.logger.logComponentLifecycle('ConfirmotpComponent', 'ngOnInit');
   }
 
-  confirmOTP() {
+  /**
+   * Custom validator to check if passwords match
+   */
+  passwordMatchValidator(form: FormGroup): { [key: string]: any } | null {
+    const password = form.get('newPassword')?.value;
+    const confirmPassword = form.get('confirmPassword')?.value;
 
-    this.regresponse.otptext = this.otptext;
-    this.service.Confirmregisteration(this.regresponse).subscribe(item => {
-      this._response = item;
-      if (this._response.result == 'pass') {
-           this.toastr.success('Registeration completed successfully.','Success');
-           this.service._registerresp.set({
-             userid: 0,
-             username: '',
-             otptext: ''
-           })
-           this.router.navigateByUrl('/login');
-      }else{
-        this.toastr.error('Failed Due to:' + this._response.message,'Registeration Failed');
+    if (password && confirmPassword && password !== confirmPassword) {
+      return { passwordMismatch: true };
+    }
+    return null;
+  }
+
+  /**
+   * Calculate password strength
+   */
+  getPasswordStrength(password: string): string {
+    if (!password) return '';
+
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) strength++;
+
+    if (strength === 0) return '';
+    if (strength <= 1) return 'Weak';
+    if (strength <= 2) return 'Fair';
+    if (strength === 3) return 'Good';
+    return 'Strong';
+  }
+
+  /**
+   * Update password strength display
+   */
+  onPasswordChange(): void {
+    const password = this.passwordForm.get('newPassword')?.value;
+    this.passwordStrength = this.getPasswordStrength(password);
+  }
+
+  /**
+   * Toggle password visibility
+   */
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  /**
+   * Toggle confirm password visibility
+   */
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  /**
+   * Create password after registration (Optional)
+   */
+  createPassword(): void {
+    if (this.passwordForm.invalid) {
+      this.toastr.error('Please fill in all required fields correctly', 'Validation Error');
+      return;
+    }
+
+    this.isCreatingPassword = true;
+
+    const passwordData: CreatePassword = {
+      newPassword: this.passwordForm.get('newPassword')?.value,
+      confirmPassword: this.passwordForm.get('confirmPassword')?.value
+    };
+
+    this.authService.createPassword(passwordData.newPassword, passwordData.confirmPassword).subscribe({
+      next: (response) => {
+        this.isCreatingPassword = false;
+        // Defensive: check for missing/invalid response
+        if (!response || typeof response !== 'object') {
+          this.logger.error('ConfirmotpComponent', 'Unexpected response structure', response);
+          this.toastr.error('Unexpected server response. Please try again later.', 'Error');
+          return;
+        }
+        const msg = (response.errorMessage || response.message || '').toLowerCase();
+        if (msg.includes('expired')) {
+          this.logger.warn('ConfirmotpComponent', 'OTP expired', response);
+          this.toastr.error('Your OTP has expired. Please request a new one.', 'OTP Expired');
+          return;
+        }
+        if (msg.includes('already verified')) {
+          this.logger.info('ConfirmotpComponent', 'Account already verified', response);
+          this.toastr.info('Your account is already verified. Please login.', 'Already Verified');
+          this.router.navigateByUrl('/login');
+          return;
+        }
+        if (msg.includes('too many') || msg.includes('attempt')) {
+          this.logger.warn('ConfirmotpComponent', 'Too many OTP attempts', response);
+          this.toastr.error('Too many failed attempts. Please try again later or request a new OTP.', 'Too Many Attempts');
+          return;
+        }
+        if (response?.result === 'pass') {
+          this.toastr.success('Password created successfully. You can now login with email and password.', 'Success');
+          this.router.navigateByUrl('/login');
+        } else {
+          this.toastr.error(response?.message || 'Failed to create password', 'Error');
+        }
+      },
+      error: (error) => {
+        this.isCreatingPassword = false;
+        this.logger.error('ConfirmotpComponent', 'Create password error', error);
+        // Show actual API error message if available
+        let apiMsg = error?.error?.message || error?.message || '';
+        if (error?.status === 0) {
+          this.toastr.error('Network error. Please check your connection and try again.', 'Network Error');
+        } else if (error?.status >= 500) {
+          this.toastr.error('Server error. Please try again later.', 'Server Error');
+        } else if (apiMsg.toLowerCase().includes('expired')) {
+          this.toastr.error('Your OTP has expired. Please request a new one.', 'OTP Expired');
+        } else if (apiMsg.toLowerCase().includes('already verified')) {
+          this.toastr.info('Your account is already verified. Please login.', 'Already Verified');
+          this.router.navigateByUrl('/login');
+        } else if (apiMsg.toLowerCase().includes('already created')) {
+          this.toastr.info('You have already created a password. Please login.', 'Password Already Created');
+          this.router.navigateByUrl('/login');
+        } else if (error?.status === 429 || apiMsg.toLowerCase().includes('too many')) {
+          this.toastr.error('Too many failed attempts. Please try again later or request a new OTP.', 'Too Many Attempts');
+        } else if (apiMsg) {
+          this.toastr.error(apiMsg, 'Error');
+        } else {
+          this.toastr.error('Failed to create password. Please try again.', 'Error');
+        }
+        // Always log the error for debugging
+        console.error('Create password API error:', error);
       }
-    })
-
+    });
   }
 
+  /**
+   * Skip password creation and go to dashboard
+   */
+  skipPasswordCreation(): void {
+    this.toastr.info('You can set up a password anytime from your profile settings', 'Skipped');
+    this.router.navigateByUrl('/');
+  }
+
+  /**
+   * Legacy method: Confirm OTP (for backward compatibility)
+   */
+  confirmOTP(): void {
+    // Map legacy regresponse (RegisterConfirm) to ConfirmRegistration
+    const confirmRegistrationObj = {
+      email: this.userEmail,
+      otptext: this.otptext
+    };
+    this.service.confirmRegistration(confirmRegistrationObj).subscribe(item => {
+      this._response = item;
+      if (this._response.result === 'pass') {
+        this.toastr.success('Registration completed successfully.', 'Success');
+        this.router.navigateByUrl('/login');
+      } else {
+        this.toastr.error('Failed Due to: ' + this._response.message, 'Registration Failed');
+      }
+    });
+  }
 }
+

@@ -1,12 +1,15 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from '../_service/user.service';
+import { AuthService } from '../_service/authentication.service';
 import { inject } from '@angular/core';
+import { map } from 'rxjs';
 
 export const authGuard: CanActivateFn = (route, state) => {
-  let router = inject(Router);
-  let toastr = inject(ToastrService);
-  let service = inject(UserService);
+  const router = inject(Router);
+  const toastr = inject(ToastrService);
+  const service = inject(UserService);
+  const authService = inject(AuthService);
 
   let menuname = '';
 
@@ -18,25 +21,37 @@ export const authGuard: CanActivateFn = (route, state) => {
     }
   }
 
-  if (localStorage.getItem('username') != null) {
-    let userrole = localStorage.getItem('userrole') as string;
-    if (menuname != '') {
-      service.Getmenupermission(userrole, menuname).subscribe((item) => {
-        if (item.haveview) {
-          return true;
-        } else {
-          toastr.warning('Unauthorized access');
-          router.navigateByUrl('/');
-          return false;
-        }
-      });
-      return true;
-    } else {
-      return true;
-    }
-  } else {
+  const isAuth = authService.getAuthStatus();
+  const username = authService.getUsername();
+  const userRole = authService.getUserRole();
+
+  if (!isAuth || !username || !userRole) {
     toastr.warning('Unauthorized access');
     router.navigateByUrl('/login');
     return false;
   }
+
+  // If no menu name specified, allow access
+  if (!menuname) {
+    return true;
+  }
+
+  // Personal user actions that don't require menu permissions
+  const personalRoutes = ['resetpassword', 'updatepassword', 'profile', 'userprofile'];
+  if (personalRoutes.includes(menuname)) {
+    return true;
+  }
+
+  // Return Observable that resolves to boolean
+  return service.getMenuPermission(userRole, menuname).pipe(
+    map((item) => {
+      if (item.haveview) {
+        return true;
+      } else {
+        toastr.warning('Unauthorized access');
+        router.navigateByUrl('/');
+        return false;
+      }
+    })
+  );
 };

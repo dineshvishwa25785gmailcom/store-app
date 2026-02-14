@@ -1,175 +1,233 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError, tap, map } from 'rxjs/operators';
 import {
-  loginresp,
-  menu,
-  menupermission,
-  menus,
-  registerconfirm,
-  resetpassword,
-  roles,
-  updatepassword,
+  LoginResponse,
+  Menu,
+  MenuPermission,
+  Menus,
+  Roles,
   UpdateRole,
-  Updatestatus,
-  usercred,
-  userregister,
-  users,
-  TblRolepermission,
+  UpdateStatus,
+  UserCredentials,
+  Users,
+  TblRolePermission,
+  InitialRegistration,
+  RequestLoginOtp,
+  ConfirmRegistration,
+  VerifyLoginOtp,
+  CreatePassword,
+  RequestForgotPasswordOtp,
+  ResetPasswordWithOtp,
+  ApiResponse,
+  LoginWithPasswordRequest
 } from '../_model/user.model';
-import { environment } from '../../environments/environment';
+import { LoggerService } from './logger.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  private baseUrl = environment.apiUrl; // 'http://localhost:86/api/User';
-  _registerresp = signal<registerconfirm>({
-    userid: 0,
-    username: '',
-    otptext: '',
-  });
+  private baseUrl = 'https://localhost:7238/api/';
+  constructor(private http: HttpClient, private logger: LoggerService) {}
 
-  constructor(private http: HttpClient) {}
-  username = signal('');
-  _menulist = signal<menu[]>([]);
-
-  Userregisteration(data: userregister): Observable<any> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
-
-    return this.http.post(`${this.baseUrl}User/userregistration`, data, {
-      headers,
-    });
+  // --- LOGIN/AUTH METHODS ---
+  initialRegistration(data: InitialRegistration): Observable<ApiResponse> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}User/initialregistration`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<ApiResponse>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
+    );
   }
-
-  Confirmregisteration(data: registerconfirm): Observable<any> {
-    console.log('Payload:', data); // Debugging log
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
-
-    return this.http.post(`${this.baseUrl}User/confirmregisteration`, data, {
-      headers,
-    });
+  loginWithPassword(data: LoginWithPasswordRequest): Observable<LoginResponse> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}User/loginwithpassword`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<LoginResponse>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
+    );
   }
-
-  //Confirmregisteration(_data: registerconfirm): Observable<any> {
-   // const headers = new HttpHeaders({
-    ////  'Content-Type': 'application/json',
-    //});
-    // Construct the URL with query parameters
-   // const url = `${this.baseUrl}User/confirmregisteration?userid=${_data.userid}&username=${_data.username}&otptext=${_data.otptext}`;
-   // console.log('URL sent to API:', url);
-    // Send the POST request with no body (null)
-    //return this.http.post(url, null, { headers });
-  //}
-
-  // Proceed with login and return the response as an observable
-  // The response type is specified as 'loginresp'  to match the expected structure
-  // The method takes 'usercred' as input, which contains the username and password for login
-  // The method uses HttpClient to send a POST request to the API endpoint for generating a token
-  // The headers are set to 'application/json' to indicate the content type of the request
-  // The method returns an observable of type 'loginresp' which can be subscribed to in the component
-  // to handle the response
-  Proceedlogin(_data: usercred): Observable<any> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
-
-    return this.http.post<loginresp>(
-      `${this.baseUrl}Authorize/GenerateToken`,
-      _data,
-      { headers }
+  requestLoginOtp(data: RequestLoginOtp): Observable<ApiResponse> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}User/requestloginotp`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<ApiResponse>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
+    );
+  }
+  confirmRegistration(data: ConfirmRegistration): Observable<LoginResponse> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}User/confirmregisteration`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<LoginResponse>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
+    );
+  }
+  resendRegistrationOtp(data: RequestLoginOtp): Observable<ApiResponse> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}User/resendregistrationotp`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<ApiResponse>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
+    );
+  }
+  verifyLoginOtp(data: VerifyLoginOtp): Observable<LoginResponse> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}User/verifyloginotp`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<LoginResponse>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
+    );
+  }
+  proceedLogin(data: UserCredentials): Observable<LoginResponse> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}Authorize/GenerateToken`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<LoginResponse>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
+    );
+  }
+  createPassword(data: CreatePassword): Observable<ApiResponse> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}User/createpassword`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<ApiResponse>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
+    );
+  }
+  requestForgotPasswordOtp(data: RequestForgotPasswordOtp): Observable<ApiResponse> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}User/requestforgotpasswordotp`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<ApiResponse>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
+    );
+  }
+  resetPasswordWithOtp(data: ResetPasswordWithOtp): Observable<ApiResponse> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}User/resetpasswordwithotp`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<ApiResponse>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
+    );
+  }
+  resetPasswordWithOldPassword(data: any): Observable<ApiResponse> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}User/resetpasswordwitholdpassword`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<ApiResponse>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
     );
   }
 
-  GenerateRefreshToken(tokenData: any): Observable<any> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
-
-    return this.http.post(
-      `${this.baseUrl}Authorize/GenerateRefreshToken`,
-      tokenData,
-      { headers }
+  // --- UTILITY & MENU/ROLE/USER METHODS ---
+  updateProfile(data: any): Observable<ApiResponse> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}User/updateprofile`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<ApiResponse>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
     );
   }
-
-  Loadmenubyrole(role: string) {
-    return this.http.get<menu[]>(
-      this.baseUrl + 'UserRole/GetAllMenusByRole?userrole=' + role
+  loadMenuByRole(role: string): Observable<Menu[]> {
+    if (!role) {
+      return new Observable<Menu[]>(observer => { observer.next([]); observer.complete(); });
+    }
+    return this.http.get<Menu[]>(this.baseUrl + 'UserRole/GetAllMenusByRole?userrole=' + role);
+  }
+  getMenuPermission(role: string, menuname: string): Observable<MenuPermission> {
+    return this.http.get<MenuPermission>(this.baseUrl + 'UserRole/GetMenusPermissionByRole?userrole=' + role + '&menucode=' + menuname);
+  }
+  getAllUsers(): Observable<Users[]> {
+    const url = `${this.baseUrl}User/GetAll`;
+    this.logger.logApiRequest('GET', url, {});
+    return this.http.get<any>(url).pipe(
+      tap(response => this.logger.logApiResponse('GET', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('GET', url, err?.status || 500, err);
+        return this.handleError(err);
+      }),
+      // Map response to array if wrapped in {data: ...}
+      // If response is already an array, return as is
+      // If response is {data: array}, return response.data
+      // Otherwise, return []
+      map(response => {
+        if (Array.isArray(response)) return response;
+        if (response && Array.isArray(response.data)) return response.data;
+        return [];
+      })
     );
   }
-  Resetpassword(_data: resetpassword): Observable<any> {
-    console.log('Payload:', _data); // Debugging log
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
-    return this.http.post(`${this.baseUrl}User/resetpassword`, _data, {
-      headers,
-    });
+  getUserByCode(code: string): Observable<Users> {
+    return this.http.get<Users>(this.baseUrl + 'User/GetBycode?code=' + code);
+  }
+  getAllRoles(): Observable<Roles[]> {
+    return this.http.get<Roles[]>(this.baseUrl + 'UserRole/GetAllRoles');
+  }
+  updateRole(data: UpdateRole): Observable<ApiResponse> {
+    return this.http.post<ApiResponse>(this.baseUrl + 'User/updaterole', data);
+  }
+  updateStatus(data: UpdateStatus): Observable<ApiResponse> {
+    return this.http.post<ApiResponse>(this.baseUrl + 'User/updatestatus', data);
+  }
+  getAllMenus(): Observable<Menus[]> {
+    return this.http.get<Menus[]>(this.baseUrl + 'UserRole/GetAllMenus');
+  }
+  assignRolePermission(data: TblRolePermission[]): Observable<ApiResponse> {
+    return this.http.post<ApiResponse>(this.baseUrl + 'UserRole/asignrolepermission', data);
   }
 
-  Forgetpassword(username: string) : Observable<any> {
-     const headers = new HttpHeaders({
-       'Content-Type': 'application/json',
-     });
-     // Construct the URL with query parameters
-    const url = `${this.baseUrl}User/forgotpassword?username=${username}`;
-   console.log('URL sent to API:', url);
-    // Send the POST request with no body (null)
-    return this.http.post(url, null, { headers });
-   // return this.http.get(this.baseUrl + 'User/forgotpassword?username=' + username)
+  handleError(error: any): Observable<never> {
+    return throwError(() => error);
   }
-
-  Updatepassword(_data: updatepassword): Observable<any> {
-    console.log('Payload:', _data); // Debugging log
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
-    return this.http.post(`${this.baseUrl}User/updatepassword`, _data, {
-      headers,
-    });
-  }
-
-
-  Getmenupermission(role:string,menuname:string){
-    return this.http.get<menupermission>(this.baseUrl + 'UserRole/GetMenusPermissionByRole?userrole='+role+'&menucode=' + menuname)
-  }
-
-
-
-
-  Getallusers() {
-    return this.http.get<users[]>(this.baseUrl + 'User/GetAll');
-  }
-
-  GetUserbycode(code:string) {
-    return this.http.get<users>(this.baseUrl + 'User/GetBycode?code='+code);
-  }
-
-  Getallroles() {
-    return this.http.get<roles[]>(this.baseUrl + 'UserRole/GetAllRoles');
-  }
-
-  Updaterole(_data: UpdateRole) {
-    return this.http.post(this.baseUrl + 'User/updaterole', _data);
-  }
-  Updatestatus(_data: Updatestatus) {
-    return this.http.post(this.baseUrl + 'User/updatestatus', _data);
-  }
-
-  Getallmenus() {
-    return this.http.get<menus[]>(this.baseUrl + 'UserRole/GetAllMenus');
-  }
-
-  Assignrolepermission(_data: TblRolepermission[]) {
-    return this.http.post(this.baseUrl + 'UserRole/asignrolepermission', _data);
-  }
-
-
-
-
 }
