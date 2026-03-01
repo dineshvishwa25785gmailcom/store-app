@@ -19,16 +19,16 @@
         <td>{{ inv.customerName }}</td>
         <td>₹{{ inv.grandTotal | number:'1.2-2' }}</td>
         <td>
-          <button mat-icon-button color="primary" (click)="data.performInvoiceAction(inv.quickInvoiceId, 'edit')">
+          <button mat-icon-button color="primary" (click)="performAction(inv.quickInvoiceId, 'edit')" matTooltip="Edit">
             <mat-icon>edit</mat-icon>
           </button>
-          <button mat-icon-button color="primary" (click)="data.performInvoiceAction(inv.quickInvoiceId, 'print')">
+          <button mat-icon-button color="primary" (click)="performAction(inv.quickInvoiceId, 'print')" matTooltip="Print">
             <mat-icon>print</mat-icon>
           </button>
-          <button mat-icon-button color="accent" (click)="data.performInvoiceAction(inv.quickInvoiceId, 'share')">
+          <button mat-icon-button color="accent" (click)="performAction(inv.quickInvoiceId, 'share')" matTooltip="Share">
             <mat-icon>share</mat-icon>
           </button>
-          <button mat-icon-button color="warn" (click)="data.performInvoiceAction(inv.quickInvoiceId, 'delete')">
+          <button mat-icon-button color="warn" (click)="performAction(inv.quickInvoiceId, 'delete')" matTooltip="Delete">
             <mat-icon>delete</mat-icon>
           </button>
         </td>

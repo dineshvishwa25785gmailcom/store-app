@@ -39,26 +39,58 @@
       
       <!-- Action Buttons -->
       <div class="action-buttons">
-        <button mat-raised-button color="primary" (click)="toggleInvoiceList()">
-          <mat-icon>list</mat-icon> Toggle Invoice List
+        <button mat-icon-button 
+                color="primary" 
+                (click)="toggleInvoiceList()"
+                matTooltip="Toggle Invoice List"
+                matTooltipPosition="above">
+          <mat-icon>list</mat-icon>
         </button>
-        <button mat-raised-button color="primary" (click)="addProduct()">
-          <mat-icon>add</mat-icon> Add Product
+        <button mat-icon-button 
+                color="primary" 
+                (click)="addProduct()"
+                matTooltip="Add Product"
+                matTooltipPosition="above">
+          <mat-icon>add_circle</mat-icon>
         </button>
-        <button mat-raised-button color="accent" (click)="saveInvoice()">
-          <mat-icon>save</mat-icon> Save Invoice
+        <button mat-icon-button 
+                color="accent" 
+                (click)="saveInvoice()"
+                matTooltip="Save Invoice"
+                matTooltipPosition="above">
+          <mat-icon>save</mat-icon>
         </button>
-        <button mat-raised-button color="warn" (click)="newInvoice()" [disabled]="items.length === 0">
-          <mat-icon>refresh</mat-icon> New Invoice
+        <button mat-icon-button 
+                color="warn" 
+                (click)="newInvoice()" 
+                [disabled]="items.length === 0"
+                matTooltip="New Invoice"
+                matTooltipPosition="above">
+          <mat-icon>add_notes</mat-icon>
         </button>
-        <button mat-raised-button color="accent" (click)="downloadPDF()" [disabled]="!isValidForPrint()">
-          <mat-icon>download</mat-icon> Download PDF
+        <button mat-icon-button 
+                color="accent" 
+                (click)="downloadPDF()" 
+                [disabled]="!isValidForPrint()"
+                matTooltip="Download PDF"
+                matTooltipPosition="above">
+          <mat-icon>download</mat-icon>
         </button>
-        <button mat-raised-button color="accent" (click)="shareToWhatsApp()" [disabled]="!isValidForPrint()">
-          <mat-icon>share</mat-icon> Share
+        <button mat-icon-button 
+                color="accent" 
+                (click)="shareToWhatsApp()" 
+                [disabled]="!isValidForPrint()"
+                matTooltip="Share via WhatsApp"
+                matTooltipPosition="above">
+          <mat-icon>share</mat-icon>
         </button>
-        <button mat-raised-button color="accent" (click)="printInvoice()" [disabled]="!isValidForPrint()">
-          <mat-icon>print</mat-icon> Print
+        <button mat-icon-button 
+                color="accent" 
+                (click)="printInvoice()" 
+                [disabled]="!isValidForPrint()"
+                matTooltip="Print Invoice"
+                matTooltipPosition="above">
+          <mat-icon>print</mat-icon>
         </button>
       </div>
 
@@ -77,12 +109,12 @@
           </thead>
           <tbody>
             <tr *ngFor="let item of items; let i = index">
-              <td>{{ i + 1 }}</td>
-              <td>
-                <mat-form-field appearance="fill">
+              <td class="sl-no-cell">{{ i + 1 }}</td>
+              <td class="product-cell">
+                <mat-form-field appearance="outline" class="table-form-field">
                   <mat-label>Product</mat-label>
                   <input matInput [(ngModel)]="item.product" (input)="onProductSearch($event, item)" 
-                         [matAutocomplete]="productAuto" placeholder="Enter or select product">
+                         [matAutocomplete]="productAuto" placeholder="Select product">
                   <mat-autocomplete #productAuto="matAutocomplete">
                     <mat-optgroup label="Products" *ngIf="filteredProducts.length > 0">
                       <mat-option *ngFor="let prod of filteredProducts" (click)="selectProduct(prod, item)">
@@ -95,17 +127,24 @@
                   </mat-autocomplete>
                 </mat-form-field>
               </td>
-              <td>
-                <input type="number" class="native-input" [(ngModel)]="item.quantity" 
-                       (ngModelChange)="calculateTotal(item)" min="1" placeholder="Qty">
+              <td class="quantity-cell">
+                <mat-form-field appearance="outline" class="table-form-field">
+                  <mat-label>Qty</mat-label>
+                  <input matInput type="number" [(ngModel)]="item.quantity" 
+                         (ngModelChange)="calculateTotal(item)" min="1" placeholder="Qty">
+                </mat-form-field>
               </td>
-              <td>
-                <input type="number" class="native-input" [(ngModel)]="item.rate" 
-                       (ngModelChange)="calculateTotal(item)" min="0" step="0.01" placeholder="Rate">
+              <td class="rate-cell">
+                <mat-form-field appearance="outline" class="table-form-field">
+                  <mat-label>Rate</mat-label>
+                  <input matInput type="number" [(ngModel)]="item.rate" 
+                         (ngModelChange)="calculateTotal(item)" min="0" step="0.01" placeholder="Rate">
+                  <mat-currency-format matSuffix>₹</mat-currency-format>
+                </mat-form-field>
               </td>
               <td class="total-cell">₹{{ item.total | number:'1.2-2' }}</td>
-              <td>
-                <button mat-icon-button color="warn" (click)="deleteItem(i)">
+              <td class="action-cell">
+                <button mat-icon-button color="warn" (click)="deleteItem(i)" matTooltip="Delete item">
                   <mat-icon>delete</mat-icon>
                 </button>
               </td>

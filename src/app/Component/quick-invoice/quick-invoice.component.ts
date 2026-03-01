@@ -91,15 +91,17 @@ toggleInvoiceList() {
       if (id) {
         this.quickInvoiceService.getInvoiceById(id).pipe(takeUntil(this.destroy$)).subscribe({
           next: (resp: any) => {
-            if (Array.isArray(resp)) {
-              this.invoices = resp;
-            } else if (resp && Array.isArray(resp.data)) {
-              this.invoices = resp.data;
-            } else if (resp && Array.isArray(resp.items)) {
-              this.invoices = resp.items;
-            } else {
-              this.invoices = resp ? [resp] : [];
+            // Handle API response which returns array in data property
+            let invoiceData = resp?.data ?? resp;
+            
+            // If data is an array, get the matching invoice or first one
+            if (Array.isArray(invoiceData)) {
+              invoiceData = invoiceData.find((invoice: any) => 
+                (invoice.quickInvoiceId === id || invoice.QuickInvoiceId === id)
+              ) || invoiceData[0];
             }
+            
+            this.hoveredInvoiceItems = invoiceData?.items ?? invoiceData?.Items ?? [];
           },
           error: (err) => {
             console.error('Error loading invoice details:', err);
@@ -126,7 +128,17 @@ toggleInvoiceList() {
     if (!id) return;
     this.quickInvoiceService.getInvoiceById(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res: any) => {
-        const dto = res?.data ?? res;
+        // Handle API response which returns an array in data property
+        let invoiceData = res?.data ?? res;
+        
+        // If data is an array, get the matching invoice or first one
+        if (Array.isArray(invoiceData)) {
+          invoiceData = invoiceData.find((inv: any) => 
+            (inv.quickInvoiceId === id || inv.QuickInvoiceId === id)
+          ) || invoiceData[0];
+        }
+        
+        const dto = invoiceData;
         this.selectedInvoiceId = dto?.quickInvoiceId ?? dto?.QuickInvoiceId ?? id;
         this.customerName = dto?.customerName ?? dto?.CustomerName ?? '';
         this.customerId = dto?.customerId ?? dto?.CustomerId ?? '';
@@ -373,7 +385,17 @@ loadInvoice(selectedInvoiceId: string) {
     .pipe(takeUntil(this.destroy$))
     .subscribe({
       next: (invoice: any) => {
-        const dto = invoice?.data ?? invoice;
+        // The API returns data as an array, so we need to get the first item or find the matching one
+        let invoiceData = invoice?.data ?? invoice;
+        
+        // If data is an array, get the matching invoice or first one
+        if (Array.isArray(invoiceData)) {
+          invoiceData = invoiceData.find((inv: any) => 
+            (inv.quickInvoiceId === selectedInvoiceId || inv.QuickInvoiceId === selectedInvoiceId)
+          ) || invoiceData[0];
+        }
+
+        const dto = invoiceData;
 
         this.selectedInvoiceId = dto?.quickInvoiceId ?? '';
         this.customerName = dto?.customerName ?? '';
