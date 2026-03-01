@@ -51,6 +51,7 @@ export interface LoginResponse {
   token: string;
   refreshToken: string;
   userRole: string;
+  username?: string;
   result?: string;
   message?: string;
   errorMessage?: string;
@@ -123,9 +124,13 @@ export interface Users {
   name: string;
   email: string;
   phone: string;
+  address?: string;
   isactive: boolean;
-  statusname: string;
+  statusname?: string;
   role: string;
+  password?: string;
+  islocked?: boolean;
+  failattempt?: number;
 }
 
 export interface Roles {

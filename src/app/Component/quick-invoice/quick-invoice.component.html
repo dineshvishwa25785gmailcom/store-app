@@ -5,14 +5,51 @@
     </mat-card-header>
     
     <mat-card-content>
+      <!-- Saved Invoices Section -->
+      <div class="saved-invoices-section" *ngIf="invoices.length > 0">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Load Saved Invoice</mat-label>
+         <mat-select [(ngModel)]="selectedInvoiceId" (selectionChange)="loadInvoice($event.value)">
+  <mat-option value="">Select an invoice...</mat-option>
+  <mat-option *ngFor="let inv of invoices" [value]="inv.quickInvoiceId">
+    {{ inv.customerName }} - ₹{{ inv.grandTotal | number:'1.2-2' }} ({{ inv.invoiceDate | date:'short' }})
+  </mat-option>
+</mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- Customer Section -->
       <div class="customer-section">
-        <input type="text" class="customer-input" [(ngModel)]="customerName" 
-               placeholder="Customer Name" #customerNameInput>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Customer Name</mat-label>
+          <input matInput [(ngModel)]="customerName" (input)="onCustomerSearch($event)" 
+                 [matAutocomplete]="customerAuto" placeholder="Enter or select customer">
+          <mat-autocomplete #customerAuto="matAutocomplete">
+            <mat-optgroup label="Customers" *ngIf="filteredCustomers.length > 0">
+              <mat-option *ngFor="let cust of filteredCustomers" (click)="selectCustomer(cust)">
+                {{ cust.name }} ({{ cust.phone }})
+              </mat-option>
+            </mat-optgroup>
+            <mat-option *ngIf="filteredCustomers.length === 0" disabled>
+              No customers found
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
       </div>
       
+      <!-- Action Buttons -->
       <div class="action-buttons">
+        <button mat-raised-button color="primary" (click)="toggleInvoiceList()">
+          <mat-icon>list</mat-icon> Toggle Invoice List
+        </button>
         <button mat-raised-button color="primary" (click)="addProduct()">
           <mat-icon>add</mat-icon> Add Product
+        </button>
+        <button mat-raised-button color="accent" (click)="saveInvoice()">
+          <mat-icon>save</mat-icon> Save Invoice
+        </button>
+        <button mat-raised-button color="warn" (click)="newInvoice()" [disabled]="items.length === 0">
+          <mat-icon>refresh</mat-icon> New Invoice
         </button>
         <button mat-raised-button color="accent" (click)="downloadPDF()" [disabled]="!isValidForPrint()">
           <mat-icon>download</mat-icon> Download PDF
@@ -25,6 +62,7 @@
         </button>
       </div>
 
+      <!-- Product Items Table -->
       <div class="table-container" *ngIf="items.length > 0">
         <table class="invoice-table">
           <thead>
@@ -41,8 +79,21 @@
             <tr *ngFor="let item of items; let i = index">
               <td>{{ i + 1 }}</td>
               <td>
-                <input type="text" class="native-input" [(ngModel)]="item.product" 
-                       placeholder="Product" #productInput>
+                <mat-form-field appearance="fill">
+                  <mat-label>Product</mat-label>
+                  <input matInput [(ngModel)]="item.product" (input)="onProductSearch($event, item)" 
+                         [matAutocomplete]="productAuto" placeholder="Enter or select product">
+                  <mat-autocomplete #productAuto="matAutocomplete">
+                    <mat-optgroup label="Products" *ngIf="filteredProducts.length > 0">
+                      <mat-option *ngFor="let prod of filteredProducts" (click)="selectProduct(prod, item)">
+                        {{ prod.productName }} - ₹{{ prod.rateWithTax || prod.rateWithoutTax || 0 | number:'1.2-2' }}
+                      </mat-option>
+                    </mat-optgroup>
+                    <mat-option *ngIf="filteredProducts.length === 0" disabled>
+                      No products found
+                    </mat-option>
+                  </mat-autocomplete>
+                </mat-form-field>
               </td>
               <td>
                 <input type="number" class="native-input" [(ngModel)]="item.quantity" 

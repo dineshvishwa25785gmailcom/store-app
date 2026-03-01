@@ -1,3 +1,5 @@
 export const environment = {
-    apiUrl: 'https://localhost:7238/api/' // Local .NET Core API
+  production: false,
+  //apiUrl: 'https://localhost:7238/api/'
+   apiUrl: 'https://rnstore.runasp.net/api/' 
 };

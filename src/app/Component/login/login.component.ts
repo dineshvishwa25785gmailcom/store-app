@@ -152,10 +152,25 @@ export class LoginComponent implements OnInit, OnDestroy {
           return;
         }
         if (response?.token) {
-          this.authService.login(response, email);
-          this.toastr.success('OTP verified successfully', 'Success');
-          // Redirect to confirmotp page, allow skip
-          this.router.navigate(['/confirmotp'], { queryParams: { skipOption: true, email } });
+          // After OTP verification, fetch user details to get the actual username
+          console.log('LOGIN_COMPONENT: OTP verified, fetching user details to get actual username');
+          this.service.getUserByCode(email).subscribe({
+            next: (user) => {
+              if (user?.username) {
+                console.log('LOGIN_COMPONENT: Got actual username from GetBycode:', user.username);
+                // Update localStorage with the correct username instead of email
+                localStorage.setItem('username', user.username);
+              }
+              this.toastr.success('OTP verified successfully', 'Success');
+              // Redirect to confirmotp page, allow skip
+              this.router.navigate(['/confirmotp'], { queryParams: { skipOption: true, email } });
+            },
+            error: (err) => {
+              console.warn('LOGIN_COMPONENT: Failed to fetch user details after OTP, using email as fallback ->', err);
+              this.toastr.success('OTP verified successfully', 'Success');
+              this.router.navigate(['/confirmotp'], { queryParams: { skipOption: true, email } });
+            }
+          });
         } else {
           this.otpErrorMessage = response?.errorMessage || response?.message || 'Invalid OTP or verification failed';
           this.toastr.error(this.otpErrorMessage, 'Login Failed');
@@ -194,20 +209,31 @@ export class LoginComponent implements OnInit, OnDestroy {
         console.log('LOGIN_COMPONENT: loginWithPassword response:', response);
         this._loginForm.get('password')?.reset();
         if (this._response?.token) {
-          this.authService.login(this._response, payload.identifier);
-          this.logger.info('LOGIN_COMPONENT', 'Login successful, loading menu', { identifier: payload.identifier, userRole: response.userRole });
-          const role = this.authService.getUserRole() || this._response.userRole || '';
-          this.service.loadMenuByRole(role).subscribe({
-            next: (menuItems) => {
-              console.log('LOGIN_COMPONENT: Menu items loaded:', menuItems);
-              this.toastr.success('Login successful', 'Welcome');
-              this.router.navigateByUrl('/');
-            },
-            error: (error) => {
-              this.logger.error('LOGIN_COMPONENT', 'Failed to load menu items', { identifier: payload.identifier }, error);
-              this.toastr.error('Failed to load menu items', 'Error');
-            }
-          });
+          // Use username from response if available, otherwise fetch from GetBycode
+          const usernameFromResponse = this._response.username;
+          console.log('LOGIN_COMPONENT: Response username:', usernameFromResponse);
+          
+          if (usernameFromResponse) {
+            console.log('LOGIN_COMPONENT: Using username from response:', usernameFromResponse);
+            this.authService.login(this._response, usernameFromResponse);
+            this.proceedWithMenuLoad(usernameFromResponse, response.userRole);
+          } else {
+            // Fetch user details to get the actual username
+            console.log('LOGIN_COMPONENT: Fetching user details using identifier:', payload.identifier);
+            this.service.getUserByCode(payload.identifier).subscribe({
+              next: (user) => {
+                const actualUsername = user?.username || payload.identifier;
+                console.log('LOGIN_COMPONENT: Got username from GetBycode:', actualUsername);
+                this.authService.login(this._response, actualUsername);
+                this.proceedWithMenuLoad(actualUsername, response.userRole);
+              },
+              error: (err) => {
+                console.warn('LOGIN_COMPONENT: Failed to fetch user details, using identifier:', err);
+                this.authService.login(this._response, payload.identifier);
+                this.proceedWithMenuLoad(payload.identifier, response.userRole);
+              }
+            });
+          }
         } else {
           this.toastr.error(this._response?.message || 'Invalid login response', 'Login Failed');
           this.logger.warn('LOGIN_COMPONENT', 'Login failed - no token in response', { identifier: payload.identifier, response });
@@ -289,6 +315,25 @@ export class LoginComponent implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     input.value = input.value.replace(/[^0-9]/g, '');
     this._otpLoginForm.get('otp')?.setValue(input.value, { emitEvent: false });
+  }
+
+  /**
+   * Helper method to load menu and redirect after successful login
+   */
+  private proceedWithMenuLoad(username: string, userRole: string): void {
+    this.logger.info('LOGIN_COMPONENT', 'Login successful, loading menu', { username, userRole });
+    const role = userRole || this.authService.getUserRole() || '';
+    this.service.loadMenuByRole(role).subscribe({
+      next: (menuItems) => {
+        console.log('LOGIN_COMPONENT: Menu items loaded:', menuItems);
+        this.toastr.success('Login successful', 'Welcome');
+        this.router.navigateByUrl('/');
+      },
+      error: (error) => {
+        this.logger.error('LOGIN_COMPONENT', 'Failed to load menu items', { username }, error);
+        this.toastr.error('Failed to load menu items', 'Error');
+      }
+    });
   }
 
   togglePasswordVisibility(): void {

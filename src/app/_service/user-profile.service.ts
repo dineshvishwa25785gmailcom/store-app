@@ -61,4 +61,15 @@ export class UserProfileService {
       email: this.getEmail() || undefined,
     };
   }
+
+  clearProfile(): void {
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userPhone');
+    localStorage.removeItem('userAddress');
+    localStorage.removeItem('userEmail');
+    this.name$.next(null);
+    this.phone$.next(null);
+    this.address$.next(null);
+    this.email$.next(null);
+  }
 }

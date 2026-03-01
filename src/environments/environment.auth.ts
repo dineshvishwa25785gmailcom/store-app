@@ -1,6 +1,8 @@
 // Dual-Auth Environment Configuration
 export const authEnvironment = {
   // API endpoints for dual-auth system
+  apiUrl: 'https://localhost:7238/api',
+  // Backwards-compatible alias
   apiBaseUrl: 'https://localhost:7238/api',
   
   // Google OAuth configuration
@@ -22,6 +24,7 @@ export const authEnvironment = {
 
 // Production environment overrides
 if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-  authEnvironment.apiBaseUrl = 'https://your-production-api.com/api';
+  authEnvironment.apiUrl = 'https://your-production-api.com/api';
+  authEnvironment.apiBaseUrl = authEnvironment.apiUrl;
   authEnvironment.googleRedirectUri = 'https://your-production-domain.com/auth/callback';
 }

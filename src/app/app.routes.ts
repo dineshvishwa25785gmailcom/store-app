@@ -64,4 +64,5 @@ export const routes: Routes = [
   { path: 'productdetails', component: ProductComponent, canActivate: [authGuard] },
   { path: 'test-invoices', component: TestInvoiceGeneratorComponent, canActivate: [authGuard] },
   { path: 'ui-test', component: UITestRunnerComponent, canActivate: [authGuard] },
+  { path: 'quick-invoice', component: QuickInvoiceComponent, canActivate: [authGuard] },
 ];

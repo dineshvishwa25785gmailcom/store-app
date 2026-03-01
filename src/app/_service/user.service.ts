@@ -24,12 +24,13 @@ import {
   LoginWithPasswordRequest
 } from '../_model/user.model';
 import { LoggerService } from './logger.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  private baseUrl = 'https://localhost:7238/api/';
+  private baseUrl = environment.apiUrl;
   constructor(private http: HttpClient, private logger: LoggerService) {}
 
   // --- LOGIN/AUTH METHODS ---
@@ -209,7 +210,18 @@ export class UserService {
     );
   }
   getUserByCode(code: string): Observable<Users> {
-    return this.http.get<Users>(this.baseUrl + 'User/GetBycode?code=' + code);
+    const encoded = encodeURIComponent(code || '');
+    const url = this.baseUrl + 'User/GetBycode?code=' + encoded;
+    console.log('UserService.getUserByCode URL ->', url);
+    this.logger.logApiRequest('GET', url, {});
+    return this.http.get<any>(url).pipe(
+      map((res: any) => {
+        // API might return wrapped object { data: user } or direct user
+        if (res == null) return null;
+        if (res.data) return res.data;
+        return res;
+      })
+    );
   }
   getAllRoles(): Observable<Roles[]> {
     return this.http.get<Roles[]>(this.baseUrl + 'UserRole/GetAllRoles');

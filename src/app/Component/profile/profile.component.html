@@ -1,9 +1,6 @@
 <div class="profile-container">
   <!-- Header -->
-  <div class="profile-header">
-    <h1>User Profile</h1>
-    <p>View and edit your profile information</p>
-  </div>
+   
 
   <!-- Profile Card -->
   <mat-card class="profile-card">
@@ -21,6 +18,18 @@
           <p class="email">{{ userEmailDisplay || 'No email set' }}</p>
           <p class="hint">To change your name, edit the fields and click <strong>Save Changes</strong>.</p>
           <p class="hint">Email cannot be changed from this screen. Contact administrator to change email.</p>
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- Logout-required dialog shown after successful profile update -->
+    <ng-template #logoutDialog>
+      <div style="padding: 24px; text-align: center; max-width: 420px;">
+        <mat-icon style="font-size:48px; color:#1976d2">info</mat-icon>
+        <h3 style="margin-top:12px">Profile updated</h3>
+        <p>Your profile was updated. You will be logged out to apply the changes. Please sign in again.</p>
+        <div style="margin-top:20px; display:flex; justify-content:center;">
+          <button mat-raised-button color="primary" (click)="closeLogoutDialog()">OK</button>
         </div>
       </div>
     </ng-template>

@@ -19,6 +19,8 @@ import { MatSlideToggleModule } from "@angular/material/slide-toggle"
 import { MatDatepickerModule } from "@angular/material/datepicker"
 import { MatNativeDateModule } from "@angular/material/core"
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner"
+import { MatAutocompleteModule } from "@angular/material/autocomplete"
+import { MatOptionModule } from "@angular/material/core"
 @NgModule({
     exports: [
         MatCardModule,
@@ -40,7 +42,9 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner"
         MatSlideToggleModule,
         MatDatepickerModule,
         MatNativeDateModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        MatAutocompleteModule,
+        MatOptionModule
     ]
 })
 export class MaterialModule { }

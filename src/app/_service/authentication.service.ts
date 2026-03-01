@@ -135,6 +135,11 @@ export class AuthService {
     return this.userService.verifyLoginOtp(data).pipe(
       tap(response => {
         if (response && response.token) {
+          // After OTP verification, fetch user details to get the actual username
+          // We'll do this in the component after calling this method
+          // For now, store with email as temporary username
+          // The component will fix it after fetching user details
+          console.log('AUTH_SERVICE: OTP verified, storing temporary auth');
           this.login(response, email);
         }
       }),

@@ -37,7 +37,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   }
 
   // Personal user actions that don't require menu permissions
-  const personalRoutes = ['resetpassword', 'updatepassword', 'profile', 'userprofile'];
+  const personalRoutes = ['resetpassword', 'updatepassword', 'profile', 'userprofile', 'quick-invoice'];
   if (personalRoutes.includes(menuname)) {
     return true;
   }

@@ -180,6 +180,23 @@ mat-card-content {
   z-index: 100;
 }
 
+/* Inline invoice list card */
+.invoice-list-card {
+  margin-top: 16px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+
+.invoice-list-table { width: 100%; border-collapse: collapse; }
+.invoice-list-table th, .invoice-list-table td { padding: 8px 10px; border-bottom: 1px solid #eee; }
+.hover-items { background: #fafafa; padding: 8px; border-left: 4px solid #667eea; }
+.hover-items ul { margin: 6px 0 0 14px; padding: 0; }
+.hover-items li { margin: 2px 0; font-size: 13px; color: #333; }
+
+/* Ensure action buttons row is visible */
+.action-buttons { background: transparent; }
+
 .empty-state {
   text-align: center;
   padding: 80px 20px;
