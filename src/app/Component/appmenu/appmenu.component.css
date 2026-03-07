@@ -24,4 +24,24 @@
     display: flex;
     margin: 0 16px;
   }
+
+  /* Mobile responsive styles */
+  @media (max-width: 600px) {
+    .social-links {
+      display: none;
+    }
+
+    mat-toolbar span:nth-of-type(2) {
+      margin-right: auto;
+      flex-shrink: 0;
+    }
+
+    button[mat-button] {
+      padding: 0 8px;
+    }
+
+    mat-toolbar {
+      min-height: 56px;
+    }
+  }
   
