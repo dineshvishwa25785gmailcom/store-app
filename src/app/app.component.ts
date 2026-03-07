@@ -1,13 +1,36 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterOutlet }s from '@angular/router';
+import { HttpClientModule } from '@angular/common/http';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
 import { AppmenuComponent } from './Component/appmenu/appmenu.component';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, AppmenuComponent],
+  standalone: true,
+  imports: [CommonModule, RouterOutlet, HttpClientModule, MatIconModule, AppmenuComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css']
 })
 export class AppComponent {
   title = 'store-app';
+
+  constructor(
+    private matIconRegistry: MatIconRegistry,
+    private domSanitizer: DomSanitizer
+  ) {
+    this.matIconRegistry.addSvgIcon(
+      'facebook',
+      this.domSanitizer.bypassSecurityTrustResourceUrl('assets/svg/facebook.svg')
+    );
+    this.matIconRegistry.addSvgIcon(
+      'instagram',
+      this.domSanitizer.bypassSecurityTrustResourceUrl('assets/svg/instagram.svg')
+    );
+    this.matIconRegistry.addSvgIcon(
+      'whatsapp',
+      this.domSanitizer.bypassSecurityTrustResourceUrl('assets/svg/whatsapp.svg')
+    );
+  }
 }

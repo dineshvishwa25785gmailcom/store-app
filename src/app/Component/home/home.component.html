@@ -1,15 +1,41 @@
 <div class="home-container">
-  <h1>Welcome to Ram Nayan Iron Store</h1>
-  <p>Your trusted source for iron and steel products.</p>
-
-  <button (click)="toggleDetails()">Learn More</button>
-
-  <div *ngIf="showDetails" class="details-box">
-    <h2>About Us</h2>
-    <p>We provide top-quality iron and steel for industrial and construction purposes, ensuring durability and reliability in every product.</p>
-  </div>
-</div>
-  <div class="footer">
-    <p>&copy; 2023 Ram Nayan Iron Store. All rights reserved.</p>
+    <div class="hero-section">
+      <h1>Welcome to Ram Nayan Iron Store</h1>
+      <p>Your trusted partner for high-quality iron and steel products.</p>
+      <a mat-raised-button color="primary" href="https://www.ramnayansteel.com/products" target="_blank">Explore Our Products</a>
+    </div>
+  
+    <div class="features-section">
+      <div class="feature-card">
+        <mat-icon>business</mat-icon>
+        <h2>Our Services</h2>
+        <p>We offer a wide range of services including custom fabrication, on-demand cutting, and bulk order delivery to meet your specific needs.</p>
+      </div>
+      <div class="feature-card">
+        <mat-icon>verified</mat-icon>
+        <h2>Why Choose Us</h2>
+        <p>With over 20 years of experience, we guarantee top-quality products, competitive pricing, and unparalleled customer service.</p>
+      </div>
+      <div class="feature-card">
+        <mat-icon>local_shipping</mat-icon>
+        <h2>Fast & Reliable Delivery</h2>
+        <p>Our streamlined logistics ensure that your orders are delivered on time, every time, so you can keep your projects on schedule.</p>
+      </div>
+    </div>
+  
+    <div class="footer">
+      <div class="social-links">
+        <a mat-icon-button href="https://www.facebook.com/ramnayanstores" target="_blank" aria-label="Facebook">
+          <mat-icon svgIcon="facebook"></mat-icon>
+        </a>
+        <a mat-icon-button href="https://www.instagram.com/ramnayanstores" target="_blank" aria-label="Instagram">
+          <mat-icon svgIcon="instagram"></mat-icon>
+        </a>
+        <a mat-icon-button href="https://wa.me/919876543210" target="_blank" aria-label="WhatsApp">
+          <mat-icon svgIcon="whatsapp"></mat-icon>
+        </a>
+      </div>
+      <p>&copy; 2024 Ram Nayan Iron Store. All rights reserved.</p>
+    </div>
   </div>
   

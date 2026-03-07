@@ -95,7 +95,6 @@
 
 .customer-table {
   width: 100%;
-  min-width: 600px;
 }
 
 .status-badge {
@@ -116,7 +115,7 @@
   color: white;
 }
 
-mat-paginator {
+.customer-paginator {
   background: transparent;
   margin-top: 1rem;
 }
@@ -151,21 +150,20 @@ mat-paginator {
   }
 
   .customer-table {
-    min-width: 100%;
     font-size: 0.85rem;
   }
 
-  mat-paginator {
+  .customer-paginator {
     margin-bottom: 2rem;
   }
 
-  ::ng-deep .mat-mdc-paginator-container {
+  :host ::ng-deep .customer-paginator .mat-mdc-paginator-container {
     flex-wrap: wrap;
     min-height: 80px;
     padding: 0.5rem 0;
   }
 
-  ::ng-deep .mat-mdc-paginator-page-size {
+  :host ::ng-deep .customer-paginator .mat-mdc-paginator-page-size {
     margin-bottom: 0.5rem;
   }
 }

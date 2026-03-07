@@ -1,72 +1,74 @@
 @if(showmenu) {
-<div class="example-spacer">
-    <div>
-        <mat-toolbar color="primary" class="mat-elevation-z8">
-            <button mat-icon-button (click)="drawer.toggle()">
-                <mat-icon>menu</mat-icon>
-            </button>
-            <span>Access Management system</span>
-            <span class="example-spacer"></span>
-            <span>{{Loginuser}}</span>
-            <button mat-button [matMenuTriggerFor]="profile"><mat-icon>arrow_drop_down</mat-icon></button>
-            <mat-menu #profile>
-                <button mat-menu-item routerLink="/profile">
-                    <mat-icon>account_circle</mat-icon>
-                    <span>Profile</span>
-                </button>
-                <button mat-menu-item routerLink="/updatepassword">
-                    <mat-icon>lock</mat-icon>
-                    <span>Update Password</span>
-                </button>
-                <mat-divider></mat-divider>
-                <button mat-menu-item routerLink="/login">
-                    <mat-icon>logout</mat-icon>
-                    <span>Logout</span>
-                </button>
-            </mat-menu>
-
-        </mat-toolbar>
-        <mat-drawer-container autosize>
-            <mat-drawer #drawer opened="true" mode="side" position="start">
-
-                <mat-nav-list>
-                    <mat-list-item>
-                        <button mat-button routerLink=""><mat-icon>home</mat-icon>Home</button>
-                    </mat-list-item>
-                    <mat-list-item>
-                        <button mat-button routerLink="/quick-invoice"><mat-icon>calculate</mat-icon>Quick Invoice</button>
-                    </mat-list-item>
-                    @if(isSuperAdmin) {
-                    <mat-divider></mat-divider>
-                    <mat-list-item>
-                      <strong style="color: #1976d2; font-size: 12px; padding: 10px 0; display: block;">SUPER ADMIN</strong>
-                    </mat-list-item>
-                    <mat-list-item>
-                        <button mat-button routerLink="/user"><mat-icon>people</mat-icon>User Management</button>
-                    </mat-list-item>
-                    <mat-list-item>
-                        <button mat-button routerLink="/userrole"><mat-icon>security</mat-icon>Role Management</button>
-                    </mat-list-item>
-                    }
-                    @for(item of menulist();track item.menucode){
-                    <mat-list-item>
-                        <button mat-button
-                            routerLink="{{item.menucode}}"><mat-icon>home</mat-icon>{{item.menuname}}</button>
-                    </mat-list-item>
-                    }
-                </mat-nav-list>
-            </mat-drawer>
-            <mat-drawer-content>
-                <div style="text-align: center;min-height: 600px;">
-                    <router-outlet></router-outlet>
-                </div>
-            </mat-drawer-content>
-        </mat-drawer-container>
-    </div>
-</div>
-}
-@else {
-<div style="text-align: center;min-height: 600px;">
+    <mat-toolbar color="primary" class="mat-elevation-z8">
+      <button mat-icon-button (click)="toggleDrawer()">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span>RN Store</span>
+      <div class="social-links">
+        <a mat-icon-button href="https://www.facebook.com/ramnayanstores" target="_blank" aria-label="Facebook">
+          <mat-icon svgIcon="facebook"></mat-icon>
+        </a>
+        <a mat-icon-button href="https://www.instagram.com/ramnayanstores" target="_blank" aria-label="Instagram">
+          <mat-icon svgIcon="instagram"></mat-icon>
+        </a>
+        <a mat-icon-button href="https://wa.me/919876543210" target="_blank" aria-label="WhatsApp">
+          <mat-icon svgIcon="whatsapp"></mat-icon>
+        </a>
+      </div>
+      <span class="example-spacer"></span>
+      <span>{{Loginuser}}</span>
+      <button mat-button [matMenuTriggerFor]="profile"><mat-icon>arrow_drop_down</mat-icon></button>
+      <mat-menu #profile>
+        <button mat-menu-item routerLink="/profile">
+          <mat-icon>account_circle</mat-icon>
+          <span>Profile</span>
+        </button>
+        <button mat-menu-item routerLink="/updatepassword">
+          <mat-icon>lock</mat-icon>
+          <span>Update Password</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item routerLink="/login">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+  
+    <mat-drawer-container class="drawer-container">
+      <mat-drawer #drawer class="drawer" [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+        [mode]="(isHandset$ | async) ? 'over' : 'side'" [opened]="true">
+        <mat-nav-list (click)="closeDrawerOnItemClick()">
+          <mat-list-item>
+            <button mat-button routerLink=""><mat-icon>home</mat-icon>Home</button>
+          </mat-list-item>
+          <mat-list-item>
+            <button mat-button routerLink="/quick-invoice"><mat-icon>calculate</mat-icon>Quick Invoice</button>
+          </mat-list-item>
+          @if(isSuperAdmin) {
+            <mat-divider></mat-divider>
+            <mat-list-item>
+              <strong style="color: #1976d2; font-size: 12px; padding: 10px 0; display: block;">SUPER ADMIN</strong>
+            </mat-list-item>
+            <mat-list-item>
+              <button mat-button routerLink="/user"><mat-icon>people</mat-icon>User Management</button>
+            </mat-list-item>
+            <mat-list-item>
+              <button mat-button routerLink="/userrole"><mat-icon>security</mat-icon>Role Management</button>
+            </mat-list-item>
+          }
+          @for(item of menulist(); track item.menucode){
+            <mat-list-item>
+              <button mat-button routerLink="{{item.menucode}}"><mat-icon>home</mat-icon>{{item.menuname}}</button>
+            </mat-list-item>
+          }
+        </mat-nav-list>
+      </mat-drawer>
+      <mat-drawer-content class="drawer-content">
+        <router-outlet></router-outlet>
+      </mat-drawer-content>
+    </mat-drawer-container>
+  } @else {
     <router-outlet></router-outlet>
-</div>
-}
+  }
+  

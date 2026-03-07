@@ -1,10 +1,14 @@
-import { Component, DoCheck, OnInit, effect, signal } from '@angular/core';
+import { Component, DoCheck, OnInit, effect, signal, ViewChild } from '@angular/core';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { Observable } from 'rxjs';
+import { map, shareReplay } from 'rxjs/operators';
 import { MaterialModule } from '../../material.module';
 import { UserService } from '../../_service/user.service';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { Menu } from '../../_model/user.model';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../_service/authentication.service';
+import { MatDrawer } from '@angular/material/sidenav';
 
 @Component({
   selector: 'app-appmenu',
@@ -14,16 +18,25 @@ import { AuthService } from '../../_service/authentication.service';
   styleUrl: './appmenu.component.css',
 })
 export class AppmenuComponent implements OnInit, DoCheck {
+  @ViewChild('drawer') drawer!: MatDrawer;
   menulist = signal<Menu[]>([]);
   Loginuser = '';
   showmenu = false;
   isSuperAdmin = false;
 
+  isHandset$: Observable<boolean>;
+
   constructor(
-    private service: UserService, 
+    private breakpointObserver: BreakpointObserver,
+    private service: UserService,
     private router: Router,
     private authService: AuthService
   ) {
+    this.isHandset$ = this.breakpointObserver.observe(Breakpoints.Handset)
+      .pipe(
+        map(result => result.matches),
+        shareReplay()
+      );
     // React to authentication state changes
     // When user logs in or out, reload the menu
     effect(() => {
@@ -81,6 +94,16 @@ export class AppmenuComponent implements OnInit, DoCheck {
     } else {
       // Only show menu when user is authenticated
       this.showmenu = this.authService.getAuthStatus();
+    }
+  }
+
+  toggleDrawer() {
+    this.drawer.toggle();
+  }
+
+  closeDrawerOnItemClick() {
+    if (this.drawer.mode === 'over') {
+      this.drawer.close();
     }
   }
 }

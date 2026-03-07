@@ -1,0 +1,27 @@
+.drawer-container {
+    height: 100%;
+  }
+  
+  .drawer {
+    width: 250px;
+  }
+  
+  .drawer-content {
+    padding: 20px;
+  }
+  
+  .mat-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .example-spacer {
+    flex: 1 1 auto;
+  }
+
+  .social-links {
+    display: flex;
+    margin: 0 16px;
+  }
+  
