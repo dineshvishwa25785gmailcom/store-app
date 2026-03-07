@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-home',
    standalone: true,
-  imports: [CommonModule],  // Import CommonModule for *ngIf to work
+  imports: [CommonModule, MatIconModule],  // Import CommonModule for *ngIf to work
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
