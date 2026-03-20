@@ -16,11 +16,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { InvoiceListDialogComponent } from '../../invoice-list-dialog/invoice-list-dialog.component';
 
 
-interface InvoiceItem extends QuickInvoiceItem {
+interface InvoiceItem {
   product: string;
-  quantity: number;
-  rate: number;
+  productId?: string;
+  productName?: string;
+  quantity: number | undefined;
+  rate: number | undefined;
   total: number;
+  filteredProducts?: ProductDTO[];  // Per-item filtered products list
 }
 
 @Component({
@@ -41,10 +44,10 @@ export class QuickInvoiceComponent implements OnInit, OnDestroy {
   customerSearchSubject = new Subject<string>();
 
   products: ProductDTO[] = [];
-  filteredProducts: ProductDTO[] = [];
-  productSearchSubject = new Subject<string>();
 
   isLoading = false;
+  isSavingInvoice = false;
+  isDeletingInvoice = false;
   invoices: any[] = [];
   selectedInvoiceId: string = '';
   
@@ -54,6 +57,10 @@ export class QuickInvoiceComponent implements OnInit, OnDestroy {
   showInvoiceList = false;
   hoveredInvoiceId: string | null = null;
   hoveredInvoiceItems: any[] = [];
+
+  // Item validation
+  readonly MAX_QUANTITY = 9999;
+  readonly MAX_RATE = 999999.99;
 
   constructor(
     private quickInvoiceService: QuickInvoiceService,
@@ -67,7 +74,6 @@ export class QuickInvoiceComponent implements OnInit, OnDestroy {
     this.loadProducts();
     this.loadInvoices();
     this.setupCustomerSearch();
-    this.setupProductSearch();
   }
 
 toggleInvoiceList() {
@@ -146,9 +152,10 @@ toggleInvoiceList() {
           product: item.productName ?? item.ProductName ?? item.product ?? '',
           productId: item.productId ?? item.ProductId ?? '',
           productName: item.productName ?? item.ProductName ?? item.product ?? '',
-          quantity: item.quantity ?? item.Quantity ?? 0,
-          rate: item.rate ?? item.Rate ?? 0,
-          total: item.total ?? item.Total ?? 0
+          quantity: item.quantity ?? item.Quantity ?? undefined,
+          rate: item.rate ?? item.Rate ?? undefined,
+          total: item.total ?? item.Total ?? 0,
+          filteredProducts: [...this.products]  // Initialize with all products
         }));
 
         if (action === 'print') {
@@ -200,7 +207,7 @@ toggleInvoiceList() {
       .subscribe({
         next: (data: any) => {
           this.products = data;
-          this.filteredProducts = data;
+
         },
         error: (err) => {
           console.error('Error loading products:', err);
@@ -248,21 +255,6 @@ toggleInvoiceList() {
       });
   }
 
-  setupProductSearch() {
-    this.productSearchSubject
-      .pipe(debounceTime(300), takeUntil(this.destroy$))
-      .subscribe((searchTerm) => {
-        if (!searchTerm.trim()) {
-          this.filteredProducts = this.products;
-        } else {
-          const term = searchTerm.toLowerCase();
-          this.filteredProducts = this.products.filter(p =>
-            p.productName?.toLowerCase().includes(term)
-          );
-        }
-      });
-  }
-
   onCustomerSearch(event: any) {
     const searchTerm = event.target.value;
     this.customerSearchSubject.next(searchTerm);
@@ -275,22 +267,61 @@ toggleInvoiceList() {
 
   onProductSearch(event: any, item: InvoiceItem) {
     const searchTerm = event.target.value;
-    this.productSearchSubject.next(searchTerm);
+    
+    if (!searchTerm.trim()) {
+      // Show all products when search is empty
+      item.filteredProducts = [...this.products];
+    } else {
+      // Check if manually entered product name matches existing products in invoice
+      const existingProduct = this.items.some(existingItem => 
+        existingItem !== item && 
+        existingItem.product.toLowerCase().trim() === searchTerm.toLowerCase().trim()
+      );
+
+      if (existingProduct) {
+        this.toastr.warning('This product is already added to the invoice');
+        item.product = '';
+        item.productId = undefined;
+        item.filteredProducts = [...this.products];
+        return;
+      }
+
+      // Filter products based on search term for this specific item
+      const term = searchTerm.toLowerCase();
+      item.filteredProducts = this.products.filter(p =>
+        p.productName?.toLowerCase().includes(term)
+      );
+    }
   }
 
   selectProduct(product: ProductDTO, item: InvoiceItem) {
+    // Check if product already exists in the invoice (excluding current item)
+    const isDuplicate = this.items.some(existingItem => 
+      existingItem !== item && 
+      existingItem.productId === product.uniqueKeyID
+    );
+
+    if (isDuplicate) {
+      this.toastr.warning('This product is already added to the invoice');
+      // Reset the product field
+      item.product = '';
+      item.productId = undefined;
+      return;
+    }
+
     item.product = product.productName ?? '';
     item.productId = product.uniqueKeyID ?? '';
     item.rate = product.rateWithTax ?? product.rateWithoutTax ?? 0;
     this.calculateTotal(item);
   }
-addProduct() {
+  addProduct() {
     this.items.push({
       product: '',
       productId: undefined,
-      quantity: 1,
-      rate: 0,
-      total: 0
+      quantity: undefined,
+      rate: undefined,
+      total: 0,
+      filteredProducts: [...this.products]  // Initialize with all products
     });
 
     setTimeout(() => {
@@ -306,7 +337,8 @@ addProduct() {
   // ---------------------------
 
   calculateTotal(item: InvoiceItem) {
-    if (item.quantity && item.rate) {
+    // Only calculate if both quantity and rate have valid values
+    if (item.quantity != null && item.quantity > 0 && item.rate != null && item.rate > 0) {
       item.total = Math.round(item.quantity * item.rate * 100) / 100;
     } else {
       item.total = 0;
@@ -326,7 +358,13 @@ addProduct() {
       item.product && item.product.trim() &&
       item.quantity != null && item.quantity > 0 &&
       item.rate != null && item.rate > 0
-    );
+    ) && this.hasNoDuplicateProducts();
+  }
+
+  hasNoDuplicateProducts(): boolean {
+    // Check for duplicate product names in the invoice
+    const productNames = this.items.map(item => item.product.toLowerCase().trim());
+    return productNames.length === new Set(productNames).size;
   }
 
 
@@ -340,12 +378,17 @@ addProduct() {
       return;
     }
 
+    if (!this.hasNoDuplicateProducts()) {
+      this.toastr.warning('Cannot save invoice with duplicate products. Please remove duplicates.');
+      return;
+    }
+
     if (!this.isValidForPrint()) {
       this.toastr.warning('Please fill all product, quantity and rate fields with valid values');
       return;
     }
 
-    const invoice = {
+    const invoice: any = {
       quickInvoiceId: this.selectedInvoiceId || undefined,
       customerId: this.customerId || undefined,
       customerName: this.customerName,
@@ -353,25 +396,28 @@ addProduct() {
       items: this.items.map(item => ({
         productId: item.productId ?? undefined,
         productName: item.product,
-        quantity: item.quantity,
-        rate: item.rate,
+        quantity: item.quantity ?? 0,
+        rate: item.rate ?? 0,
         total: item.total
       }))
     };
 
+    this.isSavingInvoice = true;
     const saveOperation = this.selectedInvoiceId
-      ? this.quickInvoiceService.updateInvoice(invoice)
-      : this.quickInvoiceService.createInvoice(invoice);
+      ? this.quickInvoiceService.updateInvoice(invoice as any)
+      : this.quickInvoiceService.createInvoice(invoice as any);
 
     saveOperation.pipe(takeUntil(this.destroy$)).subscribe({
       next: (response) => {
         this.toastr.success(response.message || 'Invoice saved successfully');
         this.selectedInvoiceId = response.data?.quickInvoiceId ?? '';
         this.loadInvoices();
+        this.isSavingInvoice = false;
       },
       error: (err) => {
         console.error('Error saving invoice:', err);
         this.toastr.error('Failed to save invoice');
+        this.isSavingInvoice = false;
       }
     });
   }
@@ -405,9 +451,10 @@ loadInvoice(selectedInvoiceId: string) {
           product: item.productName ?? item.product ?? '',
           productId: item.productId ?? '',
           productName: item.productName ?? item.product ?? '',
-          quantity: item.quantity ?? 0,
-          rate: item.rate ?? 0,
-          total: item.total ?? 0
+          quantity: item.quantity ?? undefined,
+          rate: item.rate ?? undefined,
+          total: item.total ?? 0,
+          filteredProducts: [...this.products]  // Initialize with all products
         }));
 
         this.toastr.success('Invoice loaded successfully');
@@ -419,19 +466,30 @@ loadInvoice(selectedInvoiceId: string) {
     });
 }
   newInvoice() {
-  this.selectedInvoiceId = '';
-  this.customerName = '';
-  this.customerId = '';
-  this.items = [];
+    // Confirm if there are unsaved changes
+    if (this.items.length > 0 && !confirm('Are you sure you want to create a new invoice? Any unsaved changes will be lost.')) {
+      return;
+    }
+    
+    this.selectedInvoiceId = '';
+    this.customerName = '';
+    this.customerId = '';
+    this.items = [];
 
-  this.toastr.info('Ready to create a new invoice');
-}
+    this.toastr.info('Ready to create a new invoice');
+  }
  deleteInvoiceRecord(invoiceId: string) {
   if (!invoiceId) {
     this.toastr.warning('No invoice selected to delete');
     return;
   }
 
+  // Add confirmation dialog
+  if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+    return;
+  }
+
+  this.isDeletingInvoice = true;
   this.quickInvoiceService.deleteInvoice(invoiceId)
     .pipe(takeUntil(this.destroy$))
     .subscribe({
@@ -445,186 +503,58 @@ loadInvoice(selectedInvoiceId: string) {
           this.items = [];
         }
         this.loadInvoices(); // refresh list
+        this.isDeletingInvoice = false;
       },
       error: (err) => {
         console.error('Error deleting invoice:', err);
         this.toastr.error('Failed to delete invoice');
+        this.isDeletingInvoice = false;
       }
     });
 }
   printInvoice() {
-  if (!this.isValidForPrint()) {
-    this.toastr.warning('Invoice is not valid for printing');
-    return;
-  }
-
-  const printContents = document.getElementById('print-section')?.innerHTML;
-  if (!printContents) {
-    this.toastr.error('Print section not found');
-    return;
-  }
-
-  const popupWin = window.open('', '_blank', 'width=800,height=600');
-  if (popupWin) {
-    popupWin.document.open();
-    popupWin.document.write(`
-      <html>
-        <head>
-          <title>Invoice</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #333; padding: 8px; text-align: left; }
-            th { background-color: #f2f2f2; }
-            .grand-total { margin-top: 20px; font-weight: bold; }
-          </style>
-        </head>
-        <body onload="window.print();window.close()">
-          ${printContents}
-        </body>
-      </html>
-    `);
-    popupWin.document.close();
-  }
-}
- async shareToWhatsApp() {
-  if (!this.isValidForPrint()) {
-    alert('Please fill in quantity and rate fields with valid values before sharing.');
-    return;
-  }
-
-  try {
-    // Generate PDF
-    const doc = new jsPDF();
-    const dateStr = new Date().toLocaleDateString('en-GB');
-
-    // Outer border shadow
-    doc.setFillColor(200, 200, 200);
-    doc.roundedRect(17, 12, 176, 0, 3, 3, 'S');
-
-    const tableStartY = 52;
-    const rowHeight = 10;
-    const totalHeight = tableStartY + rowHeight + (this.items.length * rowHeight) + rowHeight + 8;
-
-    doc.setDrawColor(245, 245, 245);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(15, 10, 180, totalHeight, 3, 3, 'S');
-
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(102, 126, 234);
-    doc.text('QUICK INVOICE', 105, 22, { align: 'center' });
-
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.3);
-    doc.line(20, 28, 190, 28);
-
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Date: ${dateStr}`, 20, 38);
-    doc.text(`Customer: ${this.customerName || 'N/A'}`, 120, 38);
-
-    doc.line(20, 44, 190, 44);
-
-    const startY = tableStartY;
-    const colX = [20, 40, 90, 120, 150];
-
-    // Header row
-    doc.setFillColor(102, 126, 234);
-    doc.rect(20, startY, 170, rowHeight, 'F');
-    doc.setDrawColor(80, 80, 80);
-    doc.setLineWidth(0.3);
-    doc.rect(20, startY, 170, rowHeight);
-
-    colX.slice(1).forEach(x => {
-      doc.line(x, startY, x, startY + rowHeight);
-    });
-
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(255, 255, 255);
-    doc.text('Sl.No', 30, startY + 6.5, { align: 'center' });
-    doc.text('Product Name', 65, startY + 6.5, { align: 'center' });
-    doc.text('Qty', 105, startY + 6.5, { align: 'center' });
-    doc.text('Rate', 135, startY + 6.5, { align: 'center' });
-    doc.text('Total', 170, startY + 6.5, { align: 'center' });
-
-    // Items
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-
-    let yPos = startY + rowHeight;
-    this.items.forEach((item, index) => {
-      if (index % 2 === 0) {
-        doc.setFillColor(245, 245, 245);
-        doc.rect(20, yPos, 170, rowHeight, 'F');
-      }
-
-      doc.setDrawColor(200, 200, 200);
-      doc.rect(20, yPos, 170, rowHeight);
-
-      colX.slice(1).forEach(x => {
-        doc.line(x, yPos, x, yPos + rowHeight);
-      });
-
-      doc.text((index + 1).toString(), 30, yPos + 6.5, { align: 'center' });
-      doc.text(item.product || '', 65, yPos + 6.5, { align: 'center' });
-      doc.text(item.quantity?.toString() || '0', 105, yPos + 6.5, { align: 'center' });
-      doc.text((item.rate?.toFixed(2) || '0.00'), 135, yPos + 6.5, { align: 'center' });
-      doc.text((item.total.toFixed(2)), 170, yPos + 6.5, { align: 'center' });
-
-      yPos += rowHeight;
-    });
-
-    // Grand total row
-    doc.setFillColor(240, 240, 255);
-    doc.rect(20, yPos, 170, rowHeight, 'F');
-    doc.setDrawColor(80, 80, 80);
-    doc.setLineWidth(0.5);
-    doc.rect(20, yPos, 170, rowHeight);
-    doc.line(150, yPos, 150, yPos + rowHeight);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text('GRAND TOTAL:', 85, yPos + 7, { align: 'center' });
-    doc.text(`Rs. ${this.getGrandTotal().toFixed(2)}`, 170, yPos + 7, { align: 'center' });
-
-    // Footer
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(100, 100, 100);
-    doc.text('Thank you for your business!', 105, 280, { align: 'center' });
-
-    // Get PDF as blob
-    const pdfBlob = doc.output('blob');
-    const fileName = `invoice-${dateStr.replace(/\//g, '-')}.pdf`;
-    const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-
-    // Share if supported
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: 'Quick Invoice',
-        text: `Invoice for ${this.customerName || 'Customer'} - Total: Rs.${this.getGrandTotal().toFixed(2)}`
-      });
-    } else {
-      // Fallback: download the PDF
-      alert('Sharing is not supported on this device. The PDF will be downloaded instead.');
-      doc.save(fileName);
+    if (!this.isValidForPrint()) {
+      this.toastr.warning('Invoice is not valid for printing');
+      return;
     }
-  } catch (error) {
-    alert('Unable to share. Please try downloading the PDF instead.');
-  }
-}
-  downloadPDF() {
-  if (!this.isValidForPrint()) {
-    this.toastr.warning('Invoice is not valid for download');
-    return;
+
+    // Use the correct ID from the template
+    const printElement = document.getElementById('invoice-print-area');
+    if (!printElement) {
+      this.toastr.error('Print section not found');
+      return;
+    }
+
+    const printContents = printElement.innerHTML;
+    const popupWin = window.open('', '_blank', 'width=800,height=600');
+    if (popupWin) {
+      popupWin.document.open();
+      popupWin.document.write(`
+        <html>
+          <head>
+            <title>Invoice</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+              th { background-color: #f2f2f2; }
+              .grand-total { margin-top: 20px; font-weight: bold; }
+            </style>
+          </head>
+          <body onload="window.print();window.close()">
+            ${printContents}
+          </body>
+        </html>
+      `);
+      popupWin.document.close();
+    }
   }
 
-  try {
+  // ---------------------------
+  // PDF Generation (Refactored)
+  // ---------------------------
+
+  private generateInvoicePDF(): jsPDF {
     const doc = new jsPDF();
     const dateStr = new Date().toLocaleDateString('en-GB');
 
@@ -640,6 +570,7 @@ loadInvoice(selectedInvoiceId: string) {
     doc.setLineWidth(0.5);
     doc.roundedRect(15, 10, 180, totalHeight, 3, 3, 'S');
 
+    // Header
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(102, 126, 234);
@@ -727,12 +658,55 @@ loadInvoice(selectedInvoiceId: string) {
     doc.setTextColor(100, 100, 100);
     doc.text('Thank you for your business!', 105, 280, { align: 'center' });
 
-    // Save PDF
+    return doc;
+  }
+
+ async shareToWhatsApp() {
+  if (!this.isValidForPrint()) {
+    this.toastr.warning('Please fill all required fields before sharing');
+    return;
+  }
+
+  try {
+    const doc = this.generateInvoicePDF();
+    const dateStr = new Date().toLocaleDateString('en-GB');
+    const pdfBlob = doc.output('blob');
     const fileName = `invoice-${dateStr.replace(/\//g, '-')}.pdf`;
-    doc.save(fileName);
+    const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+    // Share if supported
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'Quick Invoice',
+        text: `Invoice for ${this.customerName || 'Customer'} - Total: Rs.${this.getGrandTotal().toFixed(2)}`
+      });
+      this.toastr.success('Invoice shared successfully');
+    } else {
+      // Fallback: download the PDF
+      this.toastr.warning('Sharing not supported. Downloading PDF instead.');
+      doc.save(fileName);
+    }
   } catch (error) {
-    this.toastr.error('Unable to generate PDF');
-    console.error('PDF generation error:', error);
+    this.toastr.error('Unable to share. Please try downloading the PDF instead.');
+    console.error('Share error:', error);
   }
 }
+  downloadPDF() {
+    if (!this.isValidForPrint()) {
+      this.toastr.warning('Invoice is not valid for download');
+      return;
+    }
+
+    try {
+      const doc = this.generateInvoicePDF();
+      const dateStr = new Date().toLocaleDateString('en-GB');
+      const fileName = `invoice-${dateStr.replace(/\//g, '-')}.pdf`;
+      doc.save(fileName);
+      this.toastr.success('Invoice downloaded successfully');
+    } catch (error) {
+      this.toastr.error('Unable to generate PDF');
+      console.error('PDF generation error:', error);
+    }
+  }
 }

@@ -23,7 +23,8 @@
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>Customer Name</mat-label>
           <input matInput [(ngModel)]="customerName" (input)="onCustomerSearch($event)" 
-                 [matAutocomplete]="customerAuto" placeholder="Enter or select customer">
+                 [matAutocomplete]="customerAuto" placeholder="Enter or select customer"
+                 aria-label="Customer name input">
           <mat-autocomplete #customerAuto="matAutocomplete">
             <mat-optgroup label="Customers" *ngIf="filteredCustomers.length > 0">
               <mat-option *ngFor="let cust of filteredCustomers" (click)="selectCustomer(cust)">
@@ -42,38 +43,46 @@
         <button mat-icon-button 
                 color="primary" 
                 (click)="toggleInvoiceList()"
-                matTooltip="Toggle Invoice List"
-                matTooltipPosition="above">
+                matTooltip="View saved invoices"
+                matTooltipPosition="above"
+                aria-label="View saved invoices list">
           <mat-icon>list</mat-icon>
         </button>
         <button mat-icon-button 
                 color="primary" 
                 (click)="addProduct()"
-                matTooltip="Add Product"
-                matTooltipPosition="above">
+                matTooltip="Add product line"
+                matTooltipPosition="above"
+                aria-label="Add product line to invoice">
           <mat-icon>add_circle</mat-icon>
         </button>
         <button mat-icon-button 
                 color="accent" 
                 (click)="saveInvoice()"
-                matTooltip="Save Invoice"
-                matTooltipPosition="above">
-          <mat-icon>save</mat-icon>
+                [disabled]="isSavingInvoice"
+                matTooltip="Save invoice"
+                matTooltipPosition="above"
+                aria-label="Save invoice">
+          <mat-spinner *ngIf="isSavingInvoice" diameter="20" class="button-spinner"></mat-spinner>
+          <mat-icon *ngIf="!isSavingInvoice">save</mat-icon>
         </button>
         <button mat-icon-button 
                 color="warn" 
                 (click)="newInvoice()" 
                 [disabled]="items.length === 0"
-                matTooltip="New Invoice"
-                matTooltipPosition="above">
+                matTooltip="Create new invoice"
+                matTooltipPosition="above"
+                aria-label="Create new invoice">
           <mat-icon>add_notes</mat-icon>
         </button>
         <button mat-icon-button 
                 color="accent" 
                 (click)="downloadPDF()" 
                 [disabled]="!isValidForPrint()"
-                matTooltip="Download PDF"
-                matTooltipPosition="above">
+                matTooltip="Download as PDF"
+                matTooltipPosition="above"
+                aria-label="Download invoice as PDF"
+                class="always-visible">
           <mat-icon>download</mat-icon>
         </button>
         <button mat-icon-button 
@@ -81,15 +90,19 @@
                 (click)="shareToWhatsApp()" 
                 [disabled]="!isValidForPrint()"
                 matTooltip="Share via WhatsApp"
-                matTooltipPosition="above">
+                matTooltipPosition="above"
+                aria-label="Share invoice via WhatsApp"
+                class="always-visible">
           <mat-icon>share</mat-icon>
         </button>
         <button mat-icon-button 
                 color="accent" 
                 (click)="printInvoice()" 
                 [disabled]="!isValidForPrint()"
-                matTooltip="Print Invoice"
-                matTooltipPosition="above">
+                matTooltip="Print invoice"
+                matTooltipPosition="above"
+                aria-label="Print invoice"
+                class="always-visible">
           <mat-icon>print</mat-icon>
         </button>
       </div>
@@ -116,12 +129,12 @@
                   <input matInput [(ngModel)]="item.product" (input)="onProductSearch($event, item)" 
                          [matAutocomplete]="productAuto" placeholder="Select product">
                   <mat-autocomplete #productAuto="matAutocomplete">
-                    <mat-optgroup label="Products" *ngIf="filteredProducts.length > 0">
-                      <mat-option *ngFor="let prod of filteredProducts" (click)="selectProduct(prod, item)">
+                    <mat-optgroup label="Products" *ngIf="item.filteredProducts && item.filteredProducts.length > 0">
+                      <mat-option *ngFor="let prod of item.filteredProducts" (click)="selectProduct(prod, item)">
                         {{ prod.productName }} - ₹{{ prod.rateWithTax || prod.rateWithoutTax || 0 | number:'1.2-2' }}
                       </mat-option>
                     </mat-optgroup>
-                    <mat-option *ngIf="filteredProducts.length === 0" disabled>
+                    <mat-option *ngIf="!item.filteredProducts || item.filteredProducts.length === 0" disabled>
                       No products found
                     </mat-option>
                   </mat-autocomplete>
@@ -131,14 +144,18 @@
                 <mat-form-field appearance="outline" class="table-form-field">
                   <mat-label>Qty</mat-label>
                   <input matInput type="number" [(ngModel)]="item.quantity" 
-                         (ngModelChange)="calculateTotal(item)" min="1" placeholder="Qty">
+                         (ngModelChange)="calculateTotal(item)" 
+                         [max]="MAX_QUANTITY" placeholder="Qty"
+                         aria-label="Quantity">
                 </mat-form-field>
               </td>
               <td class="rate-cell">
                 <mat-form-field appearance="outline" class="table-form-field">
                   <mat-label>Rate</mat-label>
                   <input matInput type="number" [(ngModel)]="item.rate" 
-                         (ngModelChange)="calculateTotal(item)" min="0" step="0.01" placeholder="Rate">
+                         (ngModelChange)="calculateTotal(item)" 
+                         [max]="MAX_RATE" step="0.01" placeholder="Rate"
+                         aria-label="Rate per unit">
                   <mat-currency-format matSuffix>₹</mat-currency-format>
                 </mat-form-field>
               </td>

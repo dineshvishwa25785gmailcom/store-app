@@ -125,6 +125,21 @@ mat-card-content {
   font-size: 24px;
 }
 
+/* Loading spinner in button */
+.button-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+::ng-deep .button-spinner .mdc-circular-progress__circle-clipper {
+  border-color: currentColor !important;
+}
+
+::ng-deep .button-spinner svg {
+  color: currentColor !important;
+}
+
 /* Mobile responsive styles */
 @media (max-width: 768px) {
   .action-buttons {
@@ -132,6 +147,7 @@ mat-card-content {
     padding: 8px 0;
     justify-content: flex-start;
     overflow-x: auto;
+    scroll-behavior: smooth;
   }
 
   .action-buttons button {
@@ -144,10 +160,17 @@ mat-card-content {
     font-size: 20px;
   }
 
-  /* Hide less critical buttons on small mobile */
-  .action-buttons button:nth-child(6),
-  .action-buttons button:nth-child(7) {
-    display: none;
+  /* Keep always-visible buttons visible on mobile */
+  .action-buttons button.always-visible {
+    display: flex !important;
+  }
+
+  /* Show only essential non-print buttons initially */
+  .action-buttons button:nth-child(1),
+  .action-buttons button:nth-child(2),
+  .action-buttons button:nth-child(3),
+  .action-buttons button:nth-child(4) {
+    display: flex;
   }
 }
 
