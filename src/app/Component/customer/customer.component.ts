@@ -26,6 +26,7 @@ export class CustomerComponent implements OnInit, OnDestroy {
     'name',
     'email',
     'phone',
+    'company',
     'addressDetails',
     'status',
     'action',
@@ -33,6 +34,8 @@ export class CustomerComponent implements OnInit, OnDestroy {
   datasource = new MatTableDataSource<customer>();
   _response: any;
   private destroy$ = new Subject<void>();
+
+  companyMap: { [companyId: string]: string } = {};
 
   _permission: MenuPermission = {
     code: '',
@@ -59,6 +62,7 @@ export class CustomerComponent implements OnInit, OnDestroy {
   }
   ngOnInit(): void {
     this.loadAccess();
+    this.loadCompanies();
     this.loadCustomer();
   }
 
@@ -100,6 +104,17 @@ export class CustomerComponent implements OnInit, OnDestroy {
         this.datasource = new MatTableDataSource<customer>(this.customerlist);
         this.datasource.paginator = this.paginator;
         this.datasource.sort = this.sort;
+      });
+  }
+
+  loadCompanies(): void {
+    this.userservice.getActiveCompanies()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((companies) => {
+        if (!companies) return;
+        companies.forEach(c => {
+          if (c && c.companyId) this.companyMap[c.companyId] = c.name || '';
+        });
       });
   }
 

@@ -79,7 +79,7 @@ export class RegisterComponent implements OnInit {
           // Store email for later use
           this.authService.setUserEmail(this.userEmail);
           this.logger.logAuthEvent('Registration OTP sent', { email: this.userEmail });
-          // Move to OTP verification step
+          // Move to OTP verification step on this page
           this.currentStep = 'otp';
           this.otpMessage = `OTP has been sent to ${this.userEmail}`;
           this.toastr.success('OTP sent to your email. Please check your inbox.', 'Verify Email');
@@ -145,29 +145,12 @@ export class RegisterComponent implements OnInit {
           return;
         }
         if (response?.result === 'pass') {
-          // Store authentication tokens if present
-          if (response?.token) {
-            this.authService.login(response, this.userEmail);
-          }
+          // Registration verified. Prompt user to login using OTP on the Login page.
           this.logger.logAuthEvent('Registration OTP verified', { email: this.userEmail });
-          this.toastr.success(
-            response?.errorMessage || response?.message || 'Email verified successfully!',
-            'Success'
-          );
-          // Option 1: Navigate to optional password creation
-          // this.router.navigateByUrl('/create-password');
-          // Option 2: Go directly to dashboard
-          this.service.loadMenuByRole(response.userRole).subscribe({
-            next: (menuItems) => {
-              this.logger.info('RegisterComponent', 'Loaded menu by role', { userRole: response.userRole, menuItems });
-              this.router.navigateByUrl('/'); // Navigate to dashboard
-            },
-            error: (err) => {
-              this.logger.warn('RegisterComponent', 'Failed to load menu items after OTP verification', err);
-              this.toastr.warning('Email verified, but failed to load menu items', 'Warning');
-              this.router.navigateByUrl('/');
-            }
-          });
+          const msg = encodeURIComponent(`Registration successful for ${this.userEmail}. Please login using OTP to create your password or access the portal.`);
+          this.toastr.success(response?.errorMessage || response?.message || 'Email verified successfully!', 'Success');
+          // Navigate to Login and open OTP tab, include message so Login shows persistent info
+          this.router.navigate(['/login'], { queryParams: { mode: 'otp', email: this.userEmail, reg: '1', msg } });
         } else {
           this.logger.error('RegisterComponent', 'OTP verification failed', response);
           this.toastr.error(response?.errorMessage || response?.message || 'OTP verification failed', 'Error');

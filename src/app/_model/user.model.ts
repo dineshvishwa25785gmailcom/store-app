@@ -68,7 +68,8 @@ export interface RequestForgotPasswordOtp {
 }
 
 export interface ResetPasswordWithOtp {
-  email: string;
+  email?: string;
+  username?: string;
   otp: string;
   newPassword: string;
   confirmPassword: string;
@@ -76,6 +77,14 @@ export interface ResetPasswordWithOtp {
 
 export interface ResetPassword {
   username: string;
+  oldpassword: string;
+  newpassword: string;
+}
+
+// Request for resetting password using old password (logged-in user)
+export interface ResetPasswordRequest {
+  email?: string;      // optional, provide either email or username
+  username?: string;   // optional
   oldpassword: string;
   newpassword: string;
 }

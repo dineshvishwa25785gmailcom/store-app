@@ -12,7 +12,7 @@ import { UserService } from '../../_service/user.service';
 import { AuthService } from '../../_service/authentication.service';
 import { LoggerService } from '../../_service/logger.service';
 import { ToastrService } from 'ngx-toastr';
-import { UpdatePassword } from '../../_model/user.model';
+import { UpdatePassword, ResetPasswordRequest } from '../../_model/user.model';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -137,14 +137,15 @@ export class UpdatepasswordComponent implements OnInit {
    */
   proceedChangeWithOtp(): void {
     if (this._resetform_update.valid) {
-      let _obj: UpdatePassword = {
+      const payload = {
         username: this.currentusername,
-        password: this._resetform_update.value.password as string,
-        otptext: this._resetform_update.value.otptext as string,
+        otp: this._resetform_update.value.otptext as string,
+        newPassword: this._resetform_update.value.password as string,
+        confirmPassword: this._resetform_update.value.password as string
       };
 
       this.isLoading = true;
-      this.service.resetPasswordWithOldPassword(_obj).subscribe({
+      this.service.resetPasswordWithOtp(payload as any).subscribe({
         next: (item) => {
           this.isLoading = false;
           this._response = item;
@@ -191,11 +192,19 @@ export class UpdatepasswordComponent implements OnInit {
     const username = this.authService.getUsername();
 
     // Use lowercase field names to match backend API expectations
-    const changePasswordData = {
-      email: username,
-      oldpassword: this.changePasswordForm.get('oldPassword')?.value,  // lowercase
-      newpassword: this.changePasswordForm.get('newPassword')?.value   // lowercase
+    // Determine whether stored identifier is an email or username
+    const identifierValue = username || '';
+    const isEmailLike = identifierValue.includes('@');
+
+    const changePasswordData: ResetPasswordRequest = {
+      oldpassword: this.changePasswordForm.get('oldPassword')?.value,
+      newpassword: this.changePasswordForm.get('newPassword')?.value
     };
+    if (isEmailLike) {
+      changePasswordData.email = identifierValue;
+    } else {
+      changePasswordData.username = identifierValue;
+    }
 
     console.log('Sending change password request with payload:', changePasswordData);
     this.logger.info('UPDATEPASSWORD_COMPONENT', 'Changing password', { username, newPasswordLength: changePasswordData.newpassword.length });

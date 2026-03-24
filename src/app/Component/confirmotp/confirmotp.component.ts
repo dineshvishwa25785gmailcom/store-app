@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MaterialModule } from '../../material.module';
 import { ToastrService } from 'ngx-toastr';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { UserService } from '../../_service/user.service';
 import { AuthService } from '../../_service/authentication.service';
@@ -35,6 +35,7 @@ export class ConfirmotpComponent implements OnInit {
   constructor(
     private toastr: ToastrService,
     private router: Router,
+    private route: ActivatedRoute,
     private service: UserService,
     private authService: AuthService,
     private logger: LoggerService,
@@ -42,8 +43,40 @@ export class ConfirmotpComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // this.regresponse = this.service._registerresp(); // Removed: _registerresp does not exist on UserService
-    this.userEmail = this.authService.getUserEmail();
+    // Resolve email from query param (login flow) or fallback to authService
+    const qp: any = this.route.snapshot.queryParams || {};
+    this.userEmail = qp['email'] || this.authService.getUserEmail();
+
+    // If user already created a password, skip this page
+    if (this.userEmail) {
+      this.service.getUserByCode(this.userEmail).subscribe({
+        next: (u) => {
+          const detectPasswordCreated = (obj: any): boolean => {
+            if (!obj) return false;
+            const keys = ['hasPassword', 'isPasswordCreated', 'passwordCreated', 'isPasswordSet', 'haspassword'];
+            for (const k of keys) {
+              if (obj[k] === true) return true;
+              if (typeof obj[k] === 'string' && obj[k].toLowerCase() === 'true') return true;
+            }
+            if (obj.password && typeof obj.password === 'string' && obj.password.length > 0) {
+              const pw = obj.password.toString().trim();
+              if (pw.length === 0) return false;
+              if (pw.toUpperCase() === 'EMAIL_AUTH_ONLY') return false;
+              return true;
+            }
+            return false;
+          };
+          if (detectPasswordCreated(u)) {
+            this.toastr.info('Password already created. Redirecting to home.', 'Info');
+            this.router.navigateByUrl('/');
+            return;
+          }
+        },
+        error: () => {
+          // ignore errors here
+        }
+      });
+    }
 
     // Initialize password creation form
     this.passwordForm = this.builder.group({

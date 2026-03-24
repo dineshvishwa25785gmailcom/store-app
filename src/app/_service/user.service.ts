@@ -20,9 +20,11 @@ import {
   CreatePassword,
   RequestForgotPasswordOtp,
   ResetPasswordWithOtp,
+  ResetPasswordRequest,
   ApiResponse,
   LoginWithPasswordRequest
 } from '../_model/user.model';
+import { Company } from '../_model/company.model';
 import { LoggerService } from './logger.service';
 import { environment } from '../../environments/environment';
 
@@ -154,7 +156,7 @@ export class UserService {
       })
     );
   }
-  resetPasswordWithOldPassword(data: any): Observable<ApiResponse> {
+  resetPasswordWithOldPassword(data: ResetPasswordRequest): Observable<ApiResponse> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const url = `${this.baseUrl}User/resetpasswordwitholdpassword`;
     this.logger.logApiRequest('POST', url, data);
@@ -223,6 +225,64 @@ export class UserService {
       })
     );
   }
+  /**
+   * Map a company code to a user
+   * Request body: { companyCode: string, username: string }
+   */
+  mapCompanyCode(data: { companyId: string; username: string }): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const url = `${this.baseUrl}User/mapcompcode`;
+    this.logger.logApiRequest('POST', url, data);
+    return this.http.post<any>(url, data, { headers }).pipe(
+      tap(response => this.logger.logApiResponse('POST', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('POST', url, err?.status || 500, err);
+        return this.handleError(err);
+      })
+    );
+  }
+
+  /**
+   * Get list of active companies
+   */
+  getActiveCompanies(): Observable<Company[]> {
+    const url = `${this.baseUrl}Company/list/active`;
+    this.logger.logApiRequest('GET', url, {});
+    return this.http.get<any>(url).pipe(
+      tap(response => this.logger.logApiResponse('GET', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('GET', url, err?.status || 500, err);
+        return this.handleError(err);
+      }),
+      map(response => {
+        if (Array.isArray(response)) return response;
+        if (response && Array.isArray(response.data)) return response.data;
+        return [];
+      })
+    );
+  }
+
+  /**
+   * Get company details by company ID
+   */
+  getCompanyById(companyId: string): Observable<Company> {
+    const url = `${this.baseUrl}Company/${companyId}`;
+    this.logger.logApiRequest('GET', url, {});
+    return this.http.get<any>(url).pipe(
+      tap(response => this.logger.logApiResponse('GET', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('GET', url, err?.status || 500, err);
+        return this.handleError(err);
+      }),
+      map(response => {
+        if (!response) return {} as Company;
+        // API may return wrapper { responseCode, data: { ... } }
+        if (response.data) return response.data as Company;
+        return response as Company;
+      })
+    );
+  }
+
   getAllRoles(): Observable<Roles[]> {
     return this.http.get<Roles[]>(this.baseUrl + 'UserRole/GetAllRoles');
   }

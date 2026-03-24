@@ -37,12 +37,12 @@ export class CustomerService {
   }
 
   Updatecustomer(_data: customer): Observable<CustomerApiResult> {
-    return this.http.put<CustomerApiResult>(this.baseUrl + 'Update?code=' + _data.uniqueKeyID, _data)
+    return this.http.put<CustomerApiResult>(this.baseUrl + 'Customer/Update?code=' + _data.uniqueKeyID, _data)
       .pipe(catchError(err => this.handleError(err)));
   }
 
   Deletecustomer(code: string): Observable<any> {
-    return this.http.delete(this.baseUrl + 'Remove?code=' + code)
+    return this.http.delete(this.baseUrl + 'Customer/Remove?code=' + code)
       .pipe(catchError(err => this.handleError(err)));
   }
 

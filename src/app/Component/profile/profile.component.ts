@@ -23,6 +23,7 @@ export class ProfileComponent implements OnInit {
   currentUsername = '';
   showPassword = false;
   userEmailDisplay = '';
+  hasPassword = false;
   // Dialog is used to show non-editable info
 
   @ViewChild('logoutDialog') logoutDialog!: TemplateRef<any>;
@@ -122,6 +123,29 @@ export class ProfileComponent implements OnInit {
 
         this.userEmailDisplay = email || this.currentUsername || '';
 
+        // Determine whether user has created a password (try common flags)
+        const detectPasswordCreated = (u: any): boolean => {
+          if (!u) return false;
+          const truthyKeys = ['hasPassword', 'isPasswordCreated', 'passwordCreated', 'isPasswordSet', 'haspassword'];
+          for (const k of truthyKeys) {
+            if (u[k] === true) return true;
+            if (typeof u[k] === 'string' && u[k].toLowerCase() === 'true') return true;
+          }
+          // Some APIs use a placeholder string like 'EMAIL_AUTH_ONLY' to indicate no password set
+          if (u.password && typeof u.password === 'string' && u.password.length > 0) {
+            const pw = u.password.toString().trim();
+            if (pw.length === 0) return false;
+            if (pw.toUpperCase() === 'EMAIL_AUTH_ONLY') return false;
+            return true;
+          }
+          return false;
+        };
+
+        this.hasPassword = detectPasswordCreated(user as any);
+
+        console.log('ProfileComponent: password field ->', (user as any).password);
+        console.log('ProfileComponent: detectPasswordCreated ->', this.hasPassword, 'user object:', user);
+
         console.log('ProfileComponent: form patched ->', this.profileForm.getRawValue());
         this.cdr.detectChanges();
         console.log('ProfileComponent: view updated');
@@ -201,6 +225,7 @@ export class ProfileComponent implements OnInit {
   cancelUpdate(): void {
     this.router.navigateByUrl('/');
   }
+
 
   openInfoDialog(templateRef: any): void {
     this.dialog.open(templateRef, { width: '420px' });

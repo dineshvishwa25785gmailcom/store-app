@@ -25,6 +25,7 @@ export class AddcustomerComponent implements OnInit {
   isedit = false;
   editcode = '';
   editdata!: customer;
+  showOptional = false;
 
   countryList: Country[] = [];
   stateList: State[] = [];
@@ -43,8 +44,8 @@ export class AddcustomerComponent implements OnInit {
     this.customerform = this.builder.group({
       uniqueKeyID: [''],
       name: ['', Validators.required],
-      email: ['', Validators.required],
-      phone: ['', Validators.required],
+      email: [''],
+      phone: [''],
       addressDetails: ['', Validators.required],
       isActive: [true],
 
@@ -52,7 +53,7 @@ export class AddcustomerComponent implements OnInit {
       stateName: [''],
       mobileNo: [''],
       alternateMobile: [''],
-      customer_company: [''],
+      customer_company: ['', Validators.required],
       gst_number: [''],
 
       // Backend-only fields
@@ -61,6 +62,38 @@ export class AddcustomerComponent implements OnInit {
       updateIp: [''],
       countryCode: ['IN'],
       stateCode: ['UP']
+    });
+
+    // Conditional validators: only validate when user enters a value
+    const emailCtrl = this.customerform.get('email');
+    const phoneCtrl = this.customerform.get('phone');
+    const gstCtrl = this.customerform.get('gst_number');
+
+    emailCtrl?.valueChanges.subscribe((val) => {
+      if (val) {
+        emailCtrl.setValidators([Validators.email]);
+      } else {
+        emailCtrl.clearValidators();
+      }
+      emailCtrl.updateValueAndValidity({ emitEvent: false });
+    });
+
+    phoneCtrl?.valueChanges.subscribe((val) => {
+      if (val) {
+        phoneCtrl.setValidators([Validators.pattern(/^[0-9]{7,15}$/)]);
+      } else {
+        phoneCtrl.clearValidators();
+      }
+      phoneCtrl.updateValueAndValidity({ emitEvent: false });
+    });
+
+    gstCtrl?.valueChanges.subscribe((val) => {
+      if (val) {
+        gstCtrl.setValidators([Validators.minLength(6), Validators.maxLength(32)]);
+      } else {
+        gstCtrl.clearValidators();
+      }
+      gstCtrl.updateValueAndValidity({ emitEvent: false });
     });
 
     this.loadCountries();

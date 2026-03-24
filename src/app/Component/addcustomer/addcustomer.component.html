@@ -25,25 +25,32 @@
         <mat-label>Name</mat-label>
         <input matInput formControlName="name" />
       </mat-form-field>
+      <div fxFlex="100" fxFlex.gt-sm="48" style="display:flex;align-items:center;gap:8px">
+        <mat-form-field appearance="outline" style="flex:1">
+          <mat-label>Company</mat-label>
+          <input matInput formControlName="customer_company" />
+        </mat-form-field>
+        <button mat-stroked-button type="button" color="primary" (click)="showOptional = !showOptional">
+          {{ showOptional ? 'Hide Optional' : 'Show Optional' }}
+        </button>
+      </div>
 
-      
- <mat-form-field appearance="outline" fxFlex="100" fxFlex.gt-sm="48">
-        <mat-label>Company</mat-label>
-        <input matInput formControlName="customer_company" />
-      </mat-form-field>
+      <ng-container *ngIf="showOptional">
+        <mat-form-field appearance="outline" fxFlex="100" fxFlex.gt-sm="48">
+          <mat-label>GSTIN/UIN/Aadhar Number/Mobile Number</mat-label>
+          <input matInput formControlName="gst_number" />
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" fxFlex="100" fxFlex.gt-sm="48">
-        <mat-label>GSTIN/UIN/Aadhar Number/Mobile Number</mat-label>
-        <input matInput formControlName="gst_number" />
-      </mat-form-field>
-<mat-form-field appearance="outline" fxFlex="100" fxFlex.gt-sm="48">
-        <mat-label>Email</mat-label>
-        <input matInput formControlName="email" />
-      </mat-form-field>
-      <mat-form-field appearance="outline" fxFlex="100" fxFlex.gt-sm="48">
-        <mat-label>Phone</mat-label>
-        <input matInput formControlName="phone" />
-      </mat-form-field>
+        <mat-form-field appearance="outline" fxFlex="100" fxFlex.gt-sm="48">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" fxFlex="100" fxFlex.gt-sm="48">
+          <mat-label>Phone</mat-label>
+          <input matInput formControlName="phone" />
+        </mat-form-field>
+      </ng-container>
 
       <mat-form-field appearance="outline" fxFlex="100" fxFlex.gt-sm="48">
         <mat-label>Mobile No</mat-label>

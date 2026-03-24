@@ -56,6 +56,13 @@ export class AuthService {
   }
 
   /**
+   * Get company ID from localStorage
+   */
+  getCompanyId(): string | null {
+    return localStorage.getItem('companyid');
+  }
+
+  /**
    * Get authentication status
    */
   getAuthStatus(): boolean {
@@ -68,7 +75,59 @@ export class AuthService {
   private checkAuthStatus(): void {
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username');
-    this.isAuthenticated.set(!!token && !!username);
+    
+    // Check if both token and username exist
+    if (!token || !username) {
+      this.isAuthenticated.set(false);
+      return;
+    }
+    
+    // Validate that token is not expired
+    if (this.isTokenExpired(token)) {
+      console.warn('AUTH_SERVICE: Token is expired, clearing auth');
+      this.logout();
+      this.isAuthenticated.set(false);
+      return;
+    }
+    
+    this.isAuthenticated.set(true);
+  }
+
+  /**
+   * Check if JWT token is expired
+   */
+  private isTokenExpired(token: string): boolean {
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) return true;
+      
+      const payload = parts[1];
+      const json = decodeURIComponent(
+        Array.prototype.map.call(
+          atob(payload.replace(/-/g, '+').replace(/_/g, '/')),
+          function(c: any) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }
+        ).join('')
+      );
+      
+      const obj = JSON.parse(json);
+      const expirationTime = obj.exp;
+      
+      if (!expirationTime) {
+        return true; // No expiration claim, treat as invalid
+      }
+      
+      // exp is in seconds, convert to milliseconds
+      const expirationMs = expirationTime * 1000;
+      const currentTimeMs = Date.now();
+      
+      // Add 5 second buffer to avoid race conditions
+      return currentTimeMs > (expirationMs - 5000);
+    } catch (ex) {
+      console.error('AUTH_SERVICE: Failed to check token expiration', ex);
+      return true; // Treat as expired if we can't parse it
+    }
   }
 
   /**
@@ -88,6 +147,15 @@ export class AuthService {
       role = this.extractRoleFromToken(response.token) || '';
     }
     localStorage.setItem('userrole', role || '');
+    
+    // Extract and store company ID from token
+    if (response.token) {
+      const companyId = this.extractCompanyIdFromToken(response.token);
+      if (companyId) {
+        localStorage.setItem('companyid', companyId);
+        console.log('AUTH_SERVICE: Company ID stored:', companyId);
+      }
+    }
     
     console.log('AUTH_SERVICE: After setItem - userrole:', this.getUserRole());
     
@@ -123,6 +191,30 @@ export class AuthService {
       return null;
     } catch (ex) {
       console.error('Failed to parse JWT for role', ex);
+      return null;
+    }
+  }
+
+  /**
+   * Extract company ID claim from JWT token payload
+   */
+  private extractCompanyIdFromToken(token: string): string | null {
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+      const payload = parts[1];
+      // atob supports base64; replace url-safe chars
+      const json = decodeURIComponent(Array.prototype.map.call(atob(payload.replace(/-/g, '+').replace(/_/g, '/')), function(c: any) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      const obj = JSON.parse(json);
+      // Common claim keys: CompanyId, companyId, company
+      if (obj.CompanyId) return obj.CompanyId;
+      if (obj.companyId) return obj.companyId;
+      if (obj.company) return obj.company;
+      return null;
+    } catch (ex) {
+      console.error('Failed to parse JWT for company ID', ex);
       return null;
     }
   }
@@ -230,6 +322,7 @@ export class AuthService {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('username');
     localStorage.removeItem('userrole');
+    localStorage.removeItem('companyid');
     this.isAuthenticated.set(false);
     this.userEmail.next('');
     

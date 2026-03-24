@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MaterialModule } from '../../material.module';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { UserService } from '../../_service/user.service';
 import { AuthService } from '../../_service/authentication.service';
 import { LoggerService } from '../../_service/logger.service';
@@ -22,6 +22,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   _response!: LoginResponse;
   _loginForm!: FormGroup;
   _otpLoginForm!: FormGroup;
+  registrationMessage = '';
 
   // UI State
   loginMode: 'password' | 'otp' = 'password';
@@ -36,7 +37,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private logger: LoggerService,
     private toastr: ToastrService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -61,6 +63,24 @@ export class LoginComponent implements OnInit, OnDestroy {
       email: ['', [Validators.required, Validators.email]],
       otp: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]]
     });
+
+    // If query param requests OTP mode, switch to OTP and prefill email if provided
+    const qp = this.route.snapshot.queryParams;
+    if (qp && qp['mode'] === 'otp') {
+      this.switchLoginMode('otp');
+      const prefill = qp['email'] || this.authService.getUserEmail();
+      if (prefill) {
+        this._otpLoginForm.patchValue({ email: prefill });
+      }
+      // Show registration message if provided
+      if (qp['reg'] || qp['msg']) {
+        try {
+          this.registrationMessage = qp['msg'] ? decodeURIComponent(qp['msg']) : `Registration successful for ${prefill}. Please login using OTP.`;
+        } catch (e) {
+          this.registrationMessage = qp['msg'] || `Registration successful for ${prefill}. Please login using OTP.`;
+        }
+      }
+    }
   }
 
 

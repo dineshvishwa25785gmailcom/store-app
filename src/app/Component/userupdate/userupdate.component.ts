@@ -1,6 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MaterialModule } from '../../material.module';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Roles, UpdateUser, Users } from '../../_model/user.model';
@@ -9,9 +10,9 @@ import { UserService } from '../../_service/user.service';
 @Component({
   selector: 'app-userupdate',
   standalone: true,
-  imports: [MaterialModule, ReactiveFormsModule],
+  imports: [CommonModule, MaterialModule, ReactiveFormsModule],
   templateUrl: './userupdate.component.html',
-  styleUrl: './userupdate.component.css'
+  styleUrls: ['./userupdate.component.css']
 })
 export class UserupdateComponent implements OnInit {
   dialogdata: any;
@@ -19,15 +20,15 @@ export class UserupdateComponent implements OnInit {
   rolelist!: Roles[]
   type = '';
   _response: any;
-  userform:FormGroup;
+  userform: any;
   constructor(private builder: FormBuilder, private toastr: ToastrService, @Inject(MAT_DIALOG_DATA) public data: any,
     private service: UserService, private ref: MatDialogRef<UserupdateComponent>) {
 
       this.userform = this.builder.group({
-        username: this.builder.control({ value: '', disabled: true }),
-        role: this.builder.control('', Validators.required),
-        status: this.builder.control(true)
-      })
+        username: ['', { disabled: true }],
+        role: ['', Validators.required],
+        status: [true]
+      });
 
   }
   ngOnInit(): void {
@@ -38,7 +39,21 @@ export class UserupdateComponent implements OnInit {
       this.service.getUserByCode(this.dialogdata.username).subscribe(item => {
         this.userdata = item;
 
-        this.userform.setValue({ username: this.userdata.username, role: this.userdata.role, status: this.userdata.isactive })
+        // Coerce status to boolean to satisfy form control type
+        const rawStatus: any = (this.userdata as any).isactive;
+        let boolStatus = false;
+        if (typeof rawStatus === 'boolean') {
+          boolStatus = rawStatus;
+        } else if (typeof rawStatus === 'string') {
+          const s = String(rawStatus).toLowerCase();
+          boolStatus = (s === 'true' || s === '1' || s === 'active');
+        } else if (typeof rawStatus === 'number') {
+          boolStatus = rawStatus === 1;
+        } else {
+          boolStatus = Boolean(rawStatus);
+        }
+
+        this.userform.setValue({ username: this.userdata.username, role: this.userdata.role, status: boolStatus });
       })
     }
 

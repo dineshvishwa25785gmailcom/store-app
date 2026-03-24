@@ -1,55 +1,97 @@
 <mat-card>
-    <mat-card-header>
-        <h1>User Listing</h1>
+  <mat-card-header>
+    <h1>User Listing</h1>
+  </mat-card-header>
 
-    </mat-card-header>
-    <mat-card-content>
-        <table mat-table [dataSource]="datasource" matSort>
-            <ng-container matColumnDef="username">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Username</th>
-                <td mat-cell *matCellDef="let element">{{element.username}}</td>
-            </ng-container>
+  <mat-card-content>
+    <!-- Mobile view -->
+    <div *ngIf="isMobile" class="mobile-list">
+      <div *ngFor="let element of userlist" class="mobile-card mat-elevation-z2">
+        <div class="mobile-card-content">
+          <div class="mobile-name">{{ element.name || element.username }}</div>
+          <div class="mobile-sub">{{ element.username }} • {{ element.role }}</div>
+          <div class="mobile-sub">{{ element.email }} • {{ element.phone }}</div>
+        </div>
+        <div class="mobile-actions-row" *ngIf="canShowActions(element.role)">
+          <button mat-mini-fab color="primary" (click)="updaterole(element.username)" matTooltip="Update Role">
+            <mat-icon>manage_accounts</mat-icon>
+          </button>
+          <button mat-mini-fab color="primary" (click)="updatestatus(element.username)" matTooltip="Update Status">
+            <mat-icon>toggle_on</mat-icon>
+          </button>
+          <button mat-mini-fab color="accent" (click)="mapCompanyCode(element.username)" matTooltip="Map Company">
+            <mat-icon>business</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
 
-            <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
-                <td mat-cell *matCellDef="let element">{{element.name}}</td>
-            </ng-container>
+    <!-- Desktop/table view -->
+    <div *ngIf="!isMobile" class="table-wrapper">
+      <table mat-table [dataSource]="datasource" matSort class="mat-elevation-z8">
 
-            <ng-container matColumnDef="email">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
-                <td mat-cell *matCellDef="let element">{{element.email}}</td>
-            </ng-container>
+        <!-- Username -->
+        <ng-container matColumnDef="username">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Username</th>
+          <td mat-cell *matCellDef="let element">{{ element.username }}</td>
+        </ng-container>
 
-            <ng-container matColumnDef="phone">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Phone</th>
-                <td mat-cell *matCellDef="let element">{{element.phone}}</td>
-            </ng-container>
+        <!-- Name -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+          <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+        </ng-container>
 
-            <ng-container matColumnDef="role">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Role</th>
-                <td mat-cell *matCellDef="let element">{{element.role}}</td>
-            </ng-container>
+        <!-- Email -->
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+          <td mat-cell *matCellDef="let element">{{ element.email }}</td>
+        </ng-container>
 
-            <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-                <td mat-cell *matCellDef="let element">{{element.statusname}}</td>
-            </ng-container>
+        <!-- Phone -->
+        <ng-container matColumnDef="phone">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Phone</th>
+          <td mat-cell *matCellDef="let element">{{ element.phone }}</td>
+        </ng-container>
 
-            <ng-container matColumnDef="action">
-                <th mat-header-cell *matHeaderCellDef>Action</th>
-                <td mat-cell *matCellDef="let element">
-                    <ng-container *ngIf="element.role !== 'admin'">
-                      <button (click)="updaterole(element.username)" mat-raised-button color="primary">Update Role</button>
-                      <button (click)="updatestatus(element.username)" mat-raised-button color="primary">Update Status</button>
-                    </ng-container>
-                </td>
+        <!-- Role -->
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Role</th>
+          <td mat-cell *matCellDef="let element">{{ element.role }}</td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let element">{{ element.statusname }}</td>
+        </ng-container>
+
+        <!-- Action -->
+        <ng-container matColumnDef="action">
+          <th mat-header-cell *matHeaderCellDef>Action</th>
+          <td mat-cell *matCellDef="let element">
+            <ng-container *ngIf="canShowActions(element.role)">
+              <button (click)="updaterole(element.username)" mat-icon-button color="primary" matTooltip="Update Role">
+                <mat-icon>manage_accounts</mat-icon>
+              </button>
+              <button (click)="updatestatus(element.username)" mat-icon-button color="primary" matTooltip="Update Status">
+                <mat-icon>toggle_on</mat-icon>
+              </button>
+              <button (click)="mapCompanyCode(element.username)" mat-icon-button color="accent" matTooltip="Map Company">
+                <mat-icon>business</mat-icon>
+              </button>
             </ng-container>
-            <tr class="table-header" mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row;columns:displayedColumns"></tr>
-        </table>
-    </mat-card-content>
-    <br>
-    <mat-card-footer>
-        <mat-paginator [pageSizeOptions]="[5,10,20]" showFirstLastButtons></mat-paginator>
-    </mat-card-footer>
+          </td>
+        </ng-container>
+
+        <!-- Header & Row definitions -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  </mat-card-content>
+
+  <mat-card-footer>
+    <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+  </mat-card-footer>
 </mat-card>

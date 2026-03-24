@@ -5,6 +5,14 @@
     <p>Choose your preferred login method</p>
   </div>
 
+  <!-- Registration banner (shown when redirected after successful registration) -->
+  <mat-card *ngIf="registrationMessage" class="registration-banner" color="primary" style="margin-bottom:12px;">
+    <mat-card-content>
+      <mat-icon>info</mat-icon>
+      <span style="margin-left:8px">{{ registrationMessage }}</span>
+    </mat-card-content>
+  </mat-card>
+
   <!-- Login Mode Toggle -->
   <mat-card class="mode-toggle-card">
     <mat-card-content>

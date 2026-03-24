@@ -1,14 +1,16 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '../../material.module';
 import { Users } from '../../_model/user.model';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { UserService } from '../../_service/user.service';
+import { AuthService } from '../../_service/authentication.service';
 import { ToastrService } from 'ngx-toastr';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { UserupdateComponent } from '../userupdate/userupdate.component';
+import { MapCompanyComponent } from './map-company.component';
 import { LoggerService } from '../../_service/logger.service';
 
 @Component({
@@ -36,74 +38,107 @@ export class UserComponent implements OnInit, AfterViewInit {
     'status',
     'action',
   ];
-  datasource!: MatTableDataSource<Users>;
+  datasource = new MatTableDataSource<Users>([]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+
+  isMobile = false;
 
   constructor(
     private service: UserService,
     private toastr: ToastrService,
     private dialog: MatDialog,
-    private logger: LoggerService
+    private logger: LoggerService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    console.log('UserComponent initialized');
     this.logger.logComponentLifecycle('UserComponent', 'ngOnInit');
-    this.Loadusers();
+    this.loadUsers();
+    this.checkScreenSize();
   }
 
   ngAfterViewInit(): void {
-    console.log('UserComponent ngAfterViewInit fired');
     if (this.datasource) {
       this.datasource.paginator = this.paginator;
       this.datasource.sort = this.sort;
     }
   }
 
-Loadusers() {
-  console.log('Calling API: /User/GetAll');
-  this.service.getAllUsers().subscribe({
-    next: (users: Users[]) => {
-      this.userlist = users || [];
-      this.datasource = new MatTableDataSource<Users>(this.userlist);
-      this.datasource.paginator = this.paginator;
-      this.datasource.sort = this.sort;
-      this.logger.info('UserComponent', `Loaded ${this.userlist.length} users`);
-      this.toastr.success(`Loaded ${this.userlist.length} users`, 'Success');
-    },
-    error: (error) => {
-      console.error('Error loading users:', error);
-      this.datasource = new MatTableDataSource<Users>([]);
-      this.toastr.error('Failed to load users', 'Error');
-    }
-  });
-}
-
-  updaterole(code: string) {
-    console.log('Updating role for:', code);
-    this.Openpopup(code, 'role');
+  @HostListener('window:resize')
+  onResize() {
+    this.checkScreenSize();
   }
 
-  updatestatus(code: string) {
-    console.log('Updating status for:', code);
-    this.Openpopup(code, 'status');
+  private checkScreenSize() {
+    this.isMobile = window.innerWidth < 768;
   }
 
-  Openpopup(username: string, type: string) {
-    console.log(`Opening popup for ${username}, type: ${type}`);
-    this.dialog
-      .open(UserupdateComponent, {
-        width: '30%',
-        enterAnimationDuration: '1000ms',
-        exitAnimationDuration: '1000ms',
-        data: { username, type },
-      })
-      .afterClosed()
-      .subscribe((item) => {
-        console.log('Popup closed, reloading users');
-        this.Loadusers();
-      });
+  canShowActions(targetRole: string): boolean {
+    const current = (localStorage.getItem('userrole') || '').toLowerCase();
+    return current === 'super_admin';
+  }
+
+  loadUsers() {
+    this.service.getAllUsers().subscribe({
+      next: (users: Users[]) => {
+        this.userlist = users || [];
+        this.datasource = new MatTableDataSource<Users>(this.userlist);
+        this.datasource.paginator = this.paginator;
+        this.datasource.sort = this.sort;
+        this.logger.info('UserComponent', `Loaded ${this.userlist.length} users`);
+        this.toastr.success(`Loaded ${this.userlist.length} users`, 'Success');
+      },
+      error: (error) => {
+        console.error('Error loading users:', error);
+        this.datasource = new MatTableDataSource<Users>([]);
+        this.toastr.error('Failed to load users', 'Error');
+      }
+    });
+  }
+
+  updaterole(username: string) {
+    this.openPopup(username, 'role');
+  }
+
+  updatestatus(username: string) {
+    this.openPopup(username, 'status');
+  }
+
+  private openPopup(username: string, type: string) {
+    const cfg: any = {
+      width: this.isMobile ? '100%' : '30%',
+      maxWidth: this.isMobile ? '100vw' : '640px',
+      maxHeight: this.isMobile ? '100vh' : '80vh',
+      height: this.isMobile ? '100vh' : undefined,
+      panelClass: this.isMobile ? 'full-screen-dialog' : undefined,
+      enterAnimationDuration: '300ms',
+      exitAnimationDuration: '200ms',
+      data: { username, type }
+    };
+
+    this.dialog.open(UserupdateComponent, cfg).afterClosed().subscribe(() => {
+      this.loadUsers();
+    });
+  }
+
+  mapCompanyCode(username: string) {
+    const cfg: any = {
+      width: this.isMobile ? '100%' : '360px',
+      maxWidth: this.isMobile ? '100vw' : '480px',
+      maxHeight: this.isMobile ? '100vh' : '80vh',
+      height: this.isMobile ? '100vh' : undefined,
+      panelClass: this.isMobile ? 'full-screen-dialog' : undefined,
+      enterAnimationDuration: '200ms',
+      exitAnimationDuration: '200ms',
+      data: { username }
+    };
+
+    this.dialog.open(MapCompanyComponent, cfg).afterClosed().subscribe(result => {
+      if (result) {
+        this.loadUsers();
+      }
+    });
   }
 }
