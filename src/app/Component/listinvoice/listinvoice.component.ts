@@ -30,7 +30,7 @@ interface Invoice {
 })
 export class ListinvoiceComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [
-    'invNum',
+    'invoiceNumber',
     'invDate',
     'cuName',
     'coName',
@@ -58,6 +58,13 @@ export class ListinvoiceComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
+    
+    // Set default sorting by invoice number (ascending) using setTimeout to avoid ExpressionChangedAfterItHasBeenCheckedError
+    setTimeout(() => {
+      if (this.sort) {
+        this.sort.sort({ id: 'invoiceNumber', start: 'asc', disableClear: false });
+      }
+    }, 0);
   }
 
   ngOnDestroy(): void {
@@ -91,7 +98,35 @@ export class ListinvoiceComponent implements OnInit, AfterViewInit {
           }
 
           if (Array.isArray(data)) {
+            // assign data first
             this.dataSource.data = data;
+
+            const applyDefaultSort = () => {
+              if (!this.sort) {
+                return false;
+              }
+
+              // ensure the datasource has the MatSort reference
+              this.dataSource.sort = this.sort;
+
+              // programmatically set active sort to invoiceNumber ascending
+              this.sort.sort({ id: 'invoiceNumber', start: 'asc', disableClear: false });
+
+              // force-sort the data so the UI shows sorted rows immediately
+              try {
+                this.dataSource.data = this.dataSource.sortData(this.dataSource.data.slice(), this.sort);
+              } catch (e) {
+                // fallback: replace array reference to trigger table update
+                this.dataSource.data = this.dataSource.data.slice();
+              }
+
+              return true;
+            };
+
+            // Try immediately, otherwise retry shortly until sort is available
+            if (!applyDefaultSort()) {
+              setTimeout(() => applyDefaultSort(), 50);
+            }
           } else {
             this.alert.error('Invalid response format', 'Error');
           }

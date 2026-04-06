@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '../../material.module';
-import { Users } from '../../_model/user.model';
+import { UserDetailed } from '../../_model/user.model';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { UserService } from '../../_service/user.service';
@@ -11,6 +11,7 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { UserupdateComponent } from '../userupdate/userupdate.component';
 import { MapCompanyComponent } from './map-company.component';
+import { UserDetailsDialogComponent } from './user-details-dialog.component';
 import { LoggerService } from '../../_service/logger.service';
 
 @Component({
@@ -28,17 +29,15 @@ import { LoggerService } from '../../_service/logger.service';
   styleUrls: ['./user.component.css'],
 })
 export class UserComponent implements OnInit, AfterViewInit {
-  userlist: Users[] = [];
+  userlist: UserDetailed[] = [];
   displayedColumns: string[] = [
-    'username',
     'name',
-    'email',
-    'phone',
-    'role',
+    'companyname',
     'status',
+    'role',
     'action',
   ];
-  datasource = new MatTableDataSource<Users>([]);
+  datasource = new MatTableDataSource<UserDetailed>([]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -81,10 +80,10 @@ export class UserComponent implements OnInit, AfterViewInit {
   }
 
   loadUsers() {
-    this.service.getAllUsers().subscribe({
-      next: (users: Users[]) => {
+    this.service.getAllUsersDetailed().subscribe({
+      next: (users: UserDetailed[]) => {
         this.userlist = users || [];
-        this.datasource = new MatTableDataSource<Users>(this.userlist);
+        this.datasource = new MatTableDataSource<UserDetailed>(this.userlist);
         this.datasource.paginator = this.paginator;
         this.datasource.sort = this.sort;
         this.logger.info('UserComponent', `Loaded ${this.userlist.length} users`);
@@ -92,7 +91,7 @@ export class UserComponent implements OnInit, AfterViewInit {
       },
       error: (error) => {
         console.error('Error loading users:', error);
-        this.datasource = new MatTableDataSource<Users>([]);
+        this.datasource = new MatTableDataSource<UserDetailed>([]);
         this.toastr.error('Failed to load users', 'Error');
       }
     });
@@ -140,5 +139,23 @@ export class UserComponent implements OnInit, AfterViewInit {
         this.loadUsers();
       }
     });
+  }
+
+  /**
+   * View full user details in a dialog
+   */
+  viewUserDetails(username: string) {
+    const cfg: any = {
+      width: this.isMobile ? '100%' : '600px',
+      maxWidth: this.isMobile ? '100vw' : '700px',
+      maxHeight: this.isMobile ? '100vh' : '90vh',
+      height: this.isMobile ? '100vh' : undefined,
+      panelClass: this.isMobile ? 'full-screen-dialog' : undefined,
+      enterAnimationDuration: '300ms',
+      exitAnimationDuration: '200ms',
+      data: { username }
+    };
+
+    this.dialog.open(UserDetailsDialogComponent, cfg);
   }
 }

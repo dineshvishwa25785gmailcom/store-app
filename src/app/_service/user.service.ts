@@ -12,6 +12,7 @@ import {
   UpdateStatus,
   UserCredentials,
   Users,
+  UserDetailed,
   TblRolePermission,
   InitialRegistration,
   RequestLoginOtp,
@@ -208,6 +209,48 @@ export class UserService {
         if (Array.isArray(response)) return response;
         if (response && Array.isArray(response.data)) return response.data;
         return [];
+      })
+    );
+  }
+
+  /**
+   * Get all users with detailed information including company details
+   */
+  getAllUsersDetailed(): Observable<UserDetailed[]> {
+    const url = `${this.baseUrl}User/GetAllDetailed`;
+    this.logger.logApiRequest('GET', url, {});
+    return this.http.get<any>(url).pipe(
+      tap(response => this.logger.logApiResponse('GET', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('GET', url, err?.status || 500, err);
+        return this.handleError(err);
+      }),
+      map(response => {
+        if (Array.isArray(response)) return response;
+        if (response && Array.isArray(response.data)) return response.data;
+        return [];
+      })
+    );
+  }
+
+  /**
+   * Get user by code with detailed information including company details
+   */
+  getUserByCodeDetailed(code: string): Observable<UserDetailed> {
+    const encoded = encodeURIComponent(code || '');
+    const url = `${this.baseUrl}User/GetbycodeDetailed?code=${encoded}`;
+    this.logger.logApiRequest('GET', url, {});
+    return this.http.get<any>(url).pipe(
+      tap(response => this.logger.logApiResponse('GET', url, 200, response)),
+      catchError(err => {
+        this.logger.logApiError('GET', url, err?.status || 500, err);
+        return this.handleError(err);
+      }),
+      map((res: any) => {
+        // API might return wrapped object { data: user } or direct user
+        if (res == null) return {} as UserDetailed;
+        if (res.data) return res.data as UserDetailed;
+        return res as UserDetailed;
       })
     );
   }

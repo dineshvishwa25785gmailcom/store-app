@@ -305,3 +305,139 @@ mat-checkbox {
     font-size: 12px;
   }
 }
+
+/* Amount Cards Section */
+.amounts-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.amount-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.amount-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.amount-card.outstanding {
+  border-left: 5px solid #ff9800;
+}
+
+.amount-card.outstanding .card-icon {
+  color: #ff9800;
+  background: #fff3e0;
+}
+
+.amount-card.payable {
+  border-left: 5px solid #2196f3;
+}
+
+.amount-card.payable .card-icon {
+  color: #2196f3;
+  background: #e3f2fd;
+}
+
+.amount-card.total {
+  border-left: 5px solid #4caf50;
+}
+
+.amount-card.total .card-icon {
+  color: #4caf50;
+  background: #e8f5e9;
+}
+
+.card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.card-icon mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.card-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.hindi-text {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: #888;
+  text-transform: none;
+  letter-spacing: 0;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.card-amount {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.amount-card.outstanding .card-amount {
+  color: #ff9800;
+}
+
+.amount-card.payable .card-amount {
+  color: #2196f3;
+}
+
+.amount-card.total .card-amount {
+  color: #4caf50;
+}
+
+@media (max-width: 575px) {
+  .amounts-summary {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+/* Responsive layout for product header with new amounts summary */
+@media (min-width: 768px) {
+  .product-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .amounts-summary {
+    margin-bottom: 16px;
+  }
+
+  .product-header .action-buttons {
+    justify-content: flex-start;
+    margin-top: auto;
+  }
+}

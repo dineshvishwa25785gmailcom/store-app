@@ -174,4 +174,12 @@ export class AppmenuComponent implements OnInit, DoCheck {
       this.drawer.close();
     }
   }
+
+  /**
+   * Map menu code to actual route path
+   * Routes match menu codes directly: ledger-dashboard, ledger-outstanding-ar, ledger-maintenance
+   */
+  getMenuRoute(menuCode: string): string {
+    return `/${menuCode}`;
+  }
 }

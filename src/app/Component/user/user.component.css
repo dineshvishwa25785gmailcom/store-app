@@ -56,6 +56,54 @@ mat-paginator .mat-mdc-select { min-width: 56px; }
 /* Ensure table wrapper and paginator don't overlap on small screens */
 .table-wrapper { padding-bottom: 8px; }
 
+/* Status Badge Styles */
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-active {
+    background-color: #c8e6c9;
+    color: #2e7d32;
+}
+
+.status-inactive {
+    background-color: #ffcccc;
+    color: #c62828;
+}
+
+/* Role Badge Styles */
+.role-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.role-super_admin {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.role-admin {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.role-user {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.role-guest {
+    background-color: #f3e5f5;
+    color: #6a1b9a;
+}
+
 /* Smaller margins on very small devices */
 @media (max-width: 480px) {
     mat-card { margin: 4px; width: calc(100% - 8px); }

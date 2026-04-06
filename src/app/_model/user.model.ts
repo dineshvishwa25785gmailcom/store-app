@@ -180,6 +180,39 @@ export interface Menus {
   status: boolean;
 }
 
+// ========== COMPANY BASIC INFO (nested in detailed user) ==========
+export interface CompanyBasicInfo {
+  companyId: string;
+  companyName: string;
+  address: string;
+  createdDate: string;
+  updatedDate: string;
+}
+
+// ========== USER DETAILED DTO ==========
+export interface UserDetailed {
+  username: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  isactive: boolean;
+  islocked: boolean;
+  failattempt: number;
+  address?: string;
+  authProvider?: string;
+  googleId?: string;
+  companyId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  lastLoginDate?: string;
+  createIp?: string;
+  updateIp?: string;
+  lastIpAddress?: string;
+  company?: CompanyBasicInfo;
+  statusname?: string;
+}
+
 // ========== API RESPONSE ==========
 export interface ApiResponse<T = any> {
   result: string;

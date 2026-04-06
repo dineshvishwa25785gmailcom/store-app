@@ -20,6 +20,9 @@ import { UITestRunnerComponent } from './Component/ui-test-runner/ui-test-runner
 import { CategoryComponent } from './Component/category/category.component';
 import { ProductComponent } from './Component/product/product.component';
 import { QuickInvoiceComponent } from './Component/quick-invoice/quick-invoice.component';
+import { LedgerDashboardComponent } from './Component/ledger/ledger-dashboard/ledger-dashboard.component';
+import { OutstandingARComponent } from './Component/ledger/outstanding-ar/outstanding-ar.component';
+import { MaintenancePanelComponent } from './Component/ledger/maintenance-panel/maintenance-panel.component';
 
 export const routes: Routes = [
   {
@@ -65,4 +68,9 @@ export const routes: Routes = [
   { path: 'test-invoices', component: TestInvoiceGeneratorComponent, canActivate: [authGuard] },
   { path: 'ui-test', component: UITestRunnerComponent, canActivate: [authGuard] },
   { path: 'quick-invoice', component: QuickInvoiceComponent, canActivate: [authGuard] },
+  { path: 'ledger-dashboard', component: LedgerDashboardComponent, canActivate: [authGuard] },
+  { path: 'ledger', component: LedgerDashboardComponent, canActivate: [authGuard] }, // fallback for /ledger
+  { path: 'ledger-outstanding-ar', component: OutstandingARComponent, canActivate: [authGuard] },
+  { path: 'ledger-maintenance', component: MaintenancePanelComponent, canActivate: [superAdminGuard] },
+  { path: '**', redirectTo: '' }
 ];

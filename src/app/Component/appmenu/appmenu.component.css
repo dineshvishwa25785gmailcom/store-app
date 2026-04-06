@@ -26,14 +26,20 @@
 }
 
 .logo {
-  height: 32px;
-  margin-right: 8px;
+  height: 70px;
+  width: auto;
+  margin-right: 12px;
+  object-fit: contain;
+  object-position: center left;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .brand-container {
   display: flex;
   align-items: center;
-  margin-right: 16px;
+  justify-content: flex-start;
+  margin-right: 20px;
+  gap: 8px;
 }
 
 .brand-name {
@@ -68,7 +74,8 @@
   }
 
   .logo {
-    height: 24px;
+    height: 32px;
+    margin-right: 10px;
   }
 
   .brand-name {
@@ -88,7 +95,8 @@
   }
 
   .logo {
-    height: 28px;
+    height: 36px;
+    margin-right: 10px;
   }
 
   .brand-name {

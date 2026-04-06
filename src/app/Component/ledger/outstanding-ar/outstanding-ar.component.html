@@ -1,0 +1,129 @@
+<div class="outstanding-ar-container">
+  <div class="header">
+    <h1>Outstanding A/R</h1>
+    <button mat-raised-button color="primary" (click)="refreshData()">
+      <mat-icon>refresh</mat-icon> Refresh
+    </button>
+  </div>
+
+  <!-- Error Alert -->
+  <mat-card *ngIf="error" class="error-card">
+    <mat-card-content>
+      <div class="alert-error">
+        <mat-icon>error</mat-icon>
+        <span>{{ error }}</span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading outstanding customers...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading" class="content">
+    <!-- Search Filter -->
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search</mat-label>
+      <input matInput (keyup)="applyFilter($event)" placeholder="Search by customer name or ID">
+      <mat-icon matPrefix>search</mat-icon>
+    </mat-form-field>
+
+    <!-- Table -->
+    <mat-card class="table-card">
+      <table mat-table [dataSource]="dataSource" matSort class="outstanding-table">
+        
+        <!-- Customer Name -->
+        <ng-container matColumnDef="customerName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Customer Name</th>
+          <td mat-cell *matCellDef="let element">{{ element.customerName }}</td>
+        </ng-container>
+
+        <!-- Outstanding Balance -->
+        <ng-container matColumnDef="balance">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Outstanding Balance</th>
+          <td mat-cell *matCellDef="let element">
+            <span class="balance-value">{{ formatCurrency(element.balance) }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Days Outstanding -->
+        <ng-container matColumnDef="daysOutstanding">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Days</th>
+          <td mat-cell *matCellDef="let element">
+            <span [class]="'days-badge ' + getStatusCss(element.daysOutstanding)">
+              {{ element.daysOutstanding }} days
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Last Payment Date -->
+        <ng-container matColumnDef="lastPaymentDate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Payment</th>
+          <td mat-cell *matCellDef="let element">
+            {{ formatDate(element.lastPaymentDate) }}
+          </td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let element">
+            <span [class]="'status-badge ' + getStatusCss(element.daysOutstanding)">
+              {{ getStatusLabel(element.daysOutstanding) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button color="primary" 
+              (click)="viewCustomer(element.customerId)" 
+              matTooltip="View Details">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button color="info" 
+              (click)="viewPayments(element.customerId, element.customerName)" 
+              matTooltip="View Payments">
+              <mat-icon>receipt_long</mat-icon>
+            </button>
+            <button mat-icon-button color="warn"
+              (click)="openPaymentPrompt(element)"
+              matTooltip="Record Payment">
+              <mat-icon>attach_money</mat-icon>
+            </button>
+            <button mat-icon-button color="accent" 
+              (click)="sendReminder(element.customerId, element.customerName)" 
+              matTooltip="Send Reminder">
+              <mat-icon>mail</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <!-- Header Row -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        
+        <!-- Data Rows -->
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <!-- Paginator -->
+      <mat-paginator [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons></mat-paginator>
+    </mat-card>
+
+    <!-- No Data Message -->
+    <mat-card *ngIf="dataSource.data.length === 0" class="no-data-card">
+      <mat-card-content>
+        <div class="no-data">
+          <mat-icon>check_circle</mat-icon>
+          <p>No outstanding invoices found</p>
+          <small>Great! All customers are up to date.</small>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

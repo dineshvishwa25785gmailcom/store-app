@@ -12,6 +12,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MasterService } from '../../_service/master.service';
+import { LedgerService } from '../../_service/ledger.service';
 import { ToastrService } from 'ngx-toastr';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -78,6 +79,7 @@ export class CreateinvoiceComponent implements OnInit {
   constructor(
     private builder: FormBuilder,
     private service: MasterService,
+    private ledgerService: LedgerService,
     private router: Router,
     private alert: ToastrService,
     private activeroute: ActivatedRoute,
@@ -98,6 +100,8 @@ export class CreateinvoiceComponent implements OnInit {
   editinvdetail: any;
   displayedColumns: string[] = ['slNo', 'product', 'qty', 'rate', 'total', 'action'];
   private totalAmountSubject = new BehaviorSubject<number>(0);
+  outstandingAmount: number = 0;
+  isLoadingOutstanding: boolean = false;
   ngOnInit(): void {
     this.isLoading = true;
     this.initializeForm();
@@ -385,12 +389,29 @@ export class CreateinvoiceComponent implements OnInit {
     this.invoicedetail = this.invoiceform.get(
       'sales_product_info'
     ) as FormArray;
-let customercode = this.invoiceform.get('customerId')?.value;
-if ((customercode != null && customercode != '') || this.isedit) {
-  this.invoicedetail.push(this.Generaterow());
-} else {
-  this.alert.warning('Please select the customer', 'Validation');
-}
+    
+    // Validate required fields before adding product
+    const customerId = this.invoiceform.get('customerId')?.value;
+    const invoiceDate = this.invoiceform.get('invoiceDate')?.value;
+    const invoiceNumber = this.invoiceform.get('invoiceNumber')?.value;
+    
+    if (!customerId || customerId.trim() === '') {
+      this.alert.warning('Please select a customer first', 'Validation');
+      return;
+    }
+    
+    if (!invoiceDate) {
+      this.alert.warning('Please select an invoice date first', 'Validation');
+      return;
+    }
+    
+    if (!invoiceNumber || invoiceNumber.trim() === '') {
+      this.alert.warning('Please enter an invoice number first', 'Validation');
+      return;
+    }
+    
+    // All validations passed, add new product row
+    this.invoicedetail.push(this.Generaterow());
   }
   get invproducts() {
     return this.invoiceform.get('sales_product_info') as FormArray;
@@ -438,6 +459,8 @@ if ((customercode != null && customercode != '') || this.isedit) {
   }
   customerchange(selectedCustomer: string) {
     let customercode = this.invoiceform.get('customerId')?.value;
+    
+    // Fetch customer address and destination
     this.service.GetCustomerbycode(customercode).subscribe({
       next: (res) => {
         let custdata = res as any;
@@ -449,6 +472,52 @@ if ((customercode != null && customercode != '') || this.isedit) {
       },
       error: (err) => {
         this.alert.error('Failed to load customer details', 'Error');
+      }
+    });
+
+    // Fetch outstanding amount for the selected customer
+    this.loadOutstandingAmount(customercode);
+  }
+
+  /**
+   * Load outstanding/balance amount for selected customer
+   */
+  loadOutstandingAmount(customerId: string): void {
+    if (!customerId) {
+      this.outstandingAmount = 0;
+      return;
+    }
+
+    this.isLoadingOutstanding = true;
+    this.ledgerService.getCustomerLedger(customerId).subscribe({
+      next: (response: any) => {
+        // Handle both wrapped and direct response formats
+        let customerData = response.data || response;
+        
+        if (customerData) {
+          // Try different property names for outstanding amount
+          const outstanding = 
+            customerData.outstanding || 
+            customerData.balance || 
+            customerData.outstandingBalance?.totalOutstanding || 
+            customerData.totalOutstanding || 
+            0;
+          
+          if (typeof outstanding === 'number' && outstanding >= 0) {
+            this.outstandingAmount = outstanding;
+          } else {
+            this.outstandingAmount = 0;
+          }
+          this.cdr.detectChanges();
+        } else {
+          this.outstandingAmount = 0;
+        }
+        this.isLoadingOutstanding = false;
+      },
+      error: (err) => {
+        this.alert.warning(`Could not load outstanding amount for customer: ${err.message}`, 'Warning');
+        this.outstandingAmount = 0;
+        this.isLoadingOutstanding = false;
       }
     });
   }

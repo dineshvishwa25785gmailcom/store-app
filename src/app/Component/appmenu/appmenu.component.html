@@ -6,7 +6,7 @@
 
     <!-- Brand container -->
     <div class="brand-container">
-      <img src="assets/logo/codexclear.PNG" alt="CodeXClear Logo" class="logo" />
+      <img src="assets/logo/logo2.png" alt="CodeXClear Logo" class="logo" />
       <span class="brand-name">CodeXClear</span>
     </div>
 
@@ -49,7 +49,17 @@
         </mat-list-item>
         @for(item of menulist(); track item.menucode){
           <mat-list-item>
-            <button mat-button routerLink="{{item.menucode}}"><mat-icon>home</mat-icon>{{item.menuname}}</button>
+            <button mat-button [routerLink]="getMenuRoute(item.menucode)">
+              <mat-icon>
+                @switch(item.menucode) {
+                  @case ('ledger-dashboard') { account_balance_wallet }
+                  @case ('ledger-outstanding-ar') { trending_up }
+                  @case ('ledger-maintenance') { settings }
+                  @default { folder }
+                }
+              </mat-icon>
+              {{item.menuname}}
+            </button>
           </mat-list-item>
         }
       </mat-nav-list>
