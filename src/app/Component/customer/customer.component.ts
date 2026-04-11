@@ -22,19 +22,13 @@ import { takeUntil } from 'rxjs/operators';
 })
 export class CustomerComponent implements OnInit, OnDestroy {
   customerlist!: customer[];
-  displayedColumns: string[] = [
-    'name',
-    'email',
-    'phone',
-    'company',
-    'addressDetails',
-    'status',
-    'action',
-  ];
+  displayedColumns: string[] = ['name', 'phone', 'company', 'status', 'action'];
   datasource = new MatTableDataSource<customer>();
   _response: any;
   private destroy$ = new Subject<void>();
 
+  loading = false;
+  isMobile = false;
   companyMap: { [companyId: string]: string } = {};
 
   _permission: MenuPermission = {
@@ -55,11 +49,13 @@ export class CustomerComponent implements OnInit, OnDestroy {
     private service: CustomerService,
     private userservice: UserService,
     private toastr: ToastrService,
-    private router: Router
-    , private authService: AuthService
+    private router: Router,
+    private authService: AuthService
   ) {
-    // Constructor logic here if needed
+    this.checkMobile();
+    window.addEventListener('resize', () => this.checkMobile());
   }
+
   ngOnInit(): void {
     this.loadAccess();
     this.loadCompanies();
@@ -69,6 +65,10 @@ export class CustomerComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private checkMobile(): void {
+    this.isMobile = window.innerWidth <= 768;
   }
 
   applyFilter(event: Event) {
@@ -97,13 +97,24 @@ export class CustomerComponent implements OnInit, OnDestroy {
   }
 
   loadCustomer(): void {
+    this.loading = true;
     this.service.Getall()
       .pipe(takeUntil(this.destroy$))
       .subscribe((item) => {
         this.customerlist = item;
+        // Sort by uniqueKeyID in descending order
+        this.customerlist.sort((a, b) => {
+          const keyA = a.uniqueKeyID || '';
+          const keyB = b.uniqueKeyID || '';
+          return keyB.localeCompare(keyA, undefined, { numeric: true });
+        });
         this.datasource = new MatTableDataSource<customer>(this.customerlist);
         this.datasource.paginator = this.paginator;
         this.datasource.sort = this.sort;
+        this.loading = false;
+      }, error => {
+        console.error('Error loading customers:', error);
+        this.loading = false;
       });
   }
 
@@ -118,31 +129,28 @@ export class CustomerComponent implements OnInit, OnDestroy {
       });
   }
 
-  functionEdit(uniqueKeyID: string): void {
-    if (this._permission.haveedit) {
-      this.router.navigateByUrl('/customer/edit/' + uniqueKeyID);
-    } else {
-      this.toastr.warning('User not having edit access', 'warning');
+  customerremove(uniqueKeyID: string): void {
+    if (!this._permission.havedelete) {
+      this.toastr.warning('User not having delete access', 'Warning');
+      return;
     }
-  }
-
-  functionDelete(uniqueKeyID: string): void {
-    if (this._permission.havedelete) {
-      if (confirm('Are you sure?')) {
-        this.service.Deletecustomer(uniqueKeyID)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe((item) => {
-            this._response = item;
-            if (this._response.result === 'pass') {
-              this.toastr.success('Deleted successfully', 'Success');
+    if (confirm('Are you sure you want to delete this customer?')) {
+      this.service.Deletecustomer(uniqueKeyID)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            if (response?.result === 'pass') {
+              this.toastr.success('Customer deleted successfully', 'Success');
               this.loadCustomer();
             } else {
-              this.toastr.error('Due to:' + this._response.message, 'Failed');
+              this.toastr.error('Failed to delete: ' + response?.message, 'Error');
             }
-          });
-      }
-    } else {
-      this.toastr.warning('User not having delete access', 'warning');
+          },
+          error: (error) => {
+            console.error('Delete error:', error);
+            this.toastr.error('Failed to delete customer', 'Error');
+          }
+        });
     }
   }
 }

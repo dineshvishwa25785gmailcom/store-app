@@ -1,32 +1,76 @@
+/* ADD / EDIT CUSTOMER */
 .responsive-form {
-  padding: 16px;
-  background-color: #f9f9f9;
-  overflow-x: hidden;
+  padding: 20px 24px; max-width: 960px; margin: 0 auto;
+  background: transparent;
 }
 
-mat-card {
-  margin: 0 auto;
-  padding: 5px;
-  max-width: 960px;
-  width: 100%;
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 5px;
+/* Main card */
+.responsive-form mat-card {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08) !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 0 !important;
+  overflow: hidden;
 }
 
-mat-card-content {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+/* Card header */
+.responsive-form mat-card-header {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  padding: 18px 24px !important;
+  margin: 0 !important;
+}
+.responsive-form mat-card mat-card-title {
+  color: white !important; font-size: 18px !important; font-weight: 700 !important; margin: 0 !important;
 }
 
-mat-form-field {
-  margin-bottom: 2px;
-  min-width: 0;
+/* Card content */
+.responsive-form mat-card-content {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 0 16px !important;
+  padding: 20px 24px 8px !important;
 }
 
-mat-checkbox {
-  margin-top: 8px;
+/* Make certain fields span full width */
+.responsive-form mat-card-content mat-form-field:last-of-type,
+.responsive-form mat-card-content mat-form-field[fxFlex="100"] {
+  grid-column: 1 / -1 !important;
+}
+
+.responsive-form mat-form-field { width: 100% !important; }
+
+/* Checkbox row */
+.responsive-form mat-card-content > div:has(mat-checkbox) {
+  grid-column: 1 / -1; padding: 8px 0;
+}
+
+/* Optional toggle button */
+.responsive-form mat-card-content > div:has(mat-form-field) button {
+  border-radius: 8px !important; font-size: 12px !important;
+  height: 38px !important; padding: 0 12px !important; white-space: nowrap;
+}
+
+/* Actions */
+.action-buttons {
+  display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;
+  padding: 14px 24px 18px !important;
+  border-top: 1px solid #f1f5f9;
+}
+.action-buttons button, .action-buttons a {
+  border-radius: 10px !important; font-size: 14px !important;
+  font-weight: 600 !important; height: 44px !important;
+  min-width: 120px; padding: 0 20px !important;
+}
+
+/* Responsive */
+@media (max-width: 599px) {
+  .responsive-form { padding: 12px; }
+  .responsive-form mat-card-content {
+    grid-template-columns: 1fr !important;
+    padding: 14px 16px 8px !important;
+  }
+  .action-buttons { padding: 12px 16px !important; flex-direction: column; }
+  .action-buttons button, .action-buttons a { width: 100% !important; text-align: center; }
 }
 
 .action-buttons {

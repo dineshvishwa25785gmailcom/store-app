@@ -1,772 +1,139 @@
+/* QUICK INVOICE — mobile-native redesign */
 .quick-invoice-container {
-  display: block;
-  padding: 0;
-  width: 100%;
-  max-width: 100%;
-  min-height: 100vh;
-  background: #f5f5f5;
-  margin: 0;
-  box-sizing: border-box;
-  overflow: visible;
+  display: block; width: 100%; max-width: 100%;
+  min-height: 100vh; background: #f8fafc; padding: 0; box-sizing: border-box;
 }
 
+/* Main card */
 .invoice-card {
-  width: 100%;
-  box-shadow: none;
-  border-radius: 0;
-  min-height: 100vh;
-  margin: 0;
-  display: block;
+  width: 100%; box-shadow: none !important; border-radius: 0 !important;
+  min-height: 100vh; margin: 0; border: none !important;
 }
 
+/* Sticky header */
 mat-card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 16px;
-  margin: 0;
-  position: sticky;
-  top: 0;
-  z-index: 102;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+  color: white; padding: 16px 16px !important;
+  margin: 0; position: sticky; top: 0; z-index: 102;
+  box-shadow: 0 3px 12px rgba(79,70,229,0.35);
 }
-
 mat-card-title {
-  color: white !important;
-  font-size: 20px;
-  margin: 0;
-  font-weight: 500;
+  color: white !important; font-size: 18px; margin: 0; font-weight: 700 !important; letter-spacing: -0.2px;
 }
 
-mat-card-content {
-  padding: 12px !important;
-  display: block;
-  box-sizing: border-box;
-}
+/* Card content */
+mat-card-content { padding: 12px !important; display: block; box-sizing: border-box; }
 
-@media (max-width: 600px) {
-  mat-card-content {
-    padding: 8px !important;
-  }
-  
-  .customer-section {
-    padding: 0;
-    margin: 0 -8px;
-  }
-  
-  .action-buttons {
-    padding: 0 8px;
-  }
-}
+/* Saved invoices */
+.saved-invoices-section { margin-bottom: 10px; padding: 0; }
 
+/* Customer section */
 .customer-section {
-  margin-bottom: 12px;
-  margin-left: 0;
-  margin-right: 0;
-  position: sticky;
-  top: 56px;
-  background: #f5f5f5;
-  z-index: 101;
-  padding: 8px 12px;
-  box-sizing: border-box;
+  margin-bottom: 10px;
+  position: sticky; top: 56px; background: #f8fafc; z-index: 101; padding: 8px 0; box-sizing: border-box;
 }
 
-.customer-input {
-  width: 100%;
-  padding: 12px;
-  border: 2px solid #667eea;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: 500;
-  box-sizing: border-box;
-  background: white;
-}
-
-.customer-input:focus {
-  outline: none;
-  border-color: #764ba2;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.saved-invoices-section {
-  margin-bottom: 12px;
-  margin-left: 0;
-  margin-right: 0;
-  padding: 0 12px;
-  box-sizing: border-box;
-}
-
+/* ── Action buttons — pill-style row ─────────────────────── */
 .action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  margin-left: 0;
-  margin-right: 0;
-  position: sticky;
-  top: 120px;
-  background: #f5f5f5;
-  padding: 12px;
-  z-index: 100;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 0 12px;
+  position: sticky; top: 116px; background: #f8fafc; z-index: 100;
+  overflow-x: auto; scroll-behavior: smooth;
+  -ms-overflow-style: none; scrollbar-width: none;
   box-sizing: border-box;
 }
+.action-buttons::-webkit-scrollbar { display: none; }
 
 .action-buttons button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  height: 44px;
-  padding: 0;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  width: 44px !important; height: 44px !important; min-width: 44px !important;
+  border-radius: 12px !important; flex-shrink: 0 !important;
+  transition: transform 0.15s, box-shadow 0.15s !important;
 }
+.action-buttons button:hover { transform: translateY(-2px) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; }
 
-.action-buttons button mat-icon {
-  font-size: 24px;
-}
+.action-buttons button mat-icon { font-size: 22px; }
 
-/* Loading spinner in button */
-.button-spinner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* Button spinner */
+.button-spinner { display: flex; align-items: center; justify-content: center; }
 
-::ng-deep .button-spinner .mdc-circular-progress__circle-clipper {
-  border-color: currentColor !important;
-}
-
-::ng-deep .button-spinner svg {
-  color: currentColor !important;
-}
-
-/* Mobile responsive styles */
-@media (max-width: 768px) {
-  .action-buttons {
-    gap: 4px;
-    padding: 8px 0;
-    justify-content: flex-start;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-  }
-
-  .action-buttons button {
-    min-width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-  }
-
-  .action-buttons button mat-icon {
-    font-size: 20px;
-  }
-
-  /* Keep always-visible buttons visible on mobile */
-  .action-buttons button.always-visible {
-    display: flex !important;
-  }
-
-  /* Show only essential non-print buttons initially */
-  .action-buttons button:nth-child(1),
-  .action-buttons button:nth-child(2),
-  .action-buttons button:nth-child(3),
-  .action-buttons button:nth-child(4) {
-    display: flex;
-  }
-}
-
-.table-container {
-  margin-top: 8px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  width: 100%;
-  box-sizing: border-box;
-  margin-left: 0;
-  margin-right: 0;
-  padding: 0;
-}
+/* ── Invoice table ───────────────────────────────────────── */
+.table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; margin-top: 4px; }
 
 .invoice-table {
-  width: 100%;
-  min-width: 400px;
-  border-collapse: collapse;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  width: 100%; min-width: 380px; border-collapse: collapse;
+  background: white; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
 }
 
 .invoice-table th {
-  background: #667eea;
-  color: white;
-  padding: 12px 8px;
-  text-align: left;
-  font-weight: 500;
-  font-size: 13px;
-  position: sticky;
-  top: 188px;
-  z-index: 99;
-  white-space: nowrap;
+  background: #1e1b4b;
+  color: white; padding: 11px 8px; text-align: left;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  white-space: nowrap; position: sticky; top: 166px; z-index: 99;
 }
-
 .invoice-table td {
-  padding: 4px 2px;
-  border-bottom: 1px solid #e0e0e0;
-  vertical-align: middle;
-  height: 48px;
-  display: table-cell;
-  align-content: center;
+  padding: 4px 6px; border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle; height: 50px;
 }
+.invoice-table tbody tr:hover { background: #f8fafc; }
+.invoice-table tbody tr:last-child td { border-bottom: none; }
 
-.invoice-table tbody tr {
-  background: white;
-  height: 48px;
-}
+/* Cell classes */
+.sl-no-cell   { width: 28px; text-align: center; font-weight: 700; color: #4f46e5; font-size: 12px; }
+.product-cell { min-width: 130px; }
+.quantity-cell{ width: 68px; }
+.rate-cell    { width: 76px; }
+.total-cell   { width: 80px; font-weight: 700; color: #4f46e5; text-align: right; white-space: nowrap; }
+.action-cell  { width: 36px; text-align: center; }
 
-.invoice-table tbody tr:active {
-  background-color: #f0f0f0;
-}
+/* Table form fields */
+.table-form-field { width: 100%; margin: 0; display: block; }
+::ng-deep .table-form-field .mat-mdc-form-field-subscript-wrapper { display: none; }
+::ng-deep .table-form-field .mdc-text-field { height: 42px !important; }
+::ng-deep .table-form-field .mdc-text-field__input { padding: 0 8px !important; font-size: 13px; height: 42px !important; }
 
-.invoice-table tbody tr:hover {
-  background-color: #f5f5f5;
-}
-
-/* Table cell specific styles */
-.sl-no-cell {
-  width: 30px;
-  text-align: center;
-  font-weight: 600;
-  color: #667eea;
-  flex-shrink: 0;
-}
-
-.product-cell {
-  min-width: 120px;
-  flex-grow: 1;
-}
-
-.quantity-cell {
-  width: 60px;
-  flex-shrink: 0;
-  padding: 4px 2px !important;
-}
-
-.rate-cell {
-  width: 70px;
-  flex-shrink: 0;
-  padding: 4px 2px !important;
-}
-
-.total-cell {
-  width: 75px;
-  font-weight: 600;
-  color: #667eea;
-  font-size: 14px;
-  text-align: right;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.action-cell {
-  width: 35px;
-  text-align: center;
-  flex-shrink: 0;
-  padding: 4px 2px;
-}
-
-/* Material form field in table */
-.table-form-field {
-  width: 100%;
-  margin: 0;
-  display: block;
-}
-
-/* Specific styling for Quantity and Rate input controls */
-.quantity-cell .table-form-field,
-.rate-cell .table-form-field {
-  width: 110px;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-::ng-deep .quantity-cell .table-form-field .mat-mdc-text-field-wrapper,
-::ng-deep .rate-cell .table-form-field .mat-mdc-text-field-wrapper {
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-::ng-deep .quantity-cell .table-form-field .mdc-text-field__input,
-::ng-deep .rate-cell .table-form-field .mdc-text-field__input {
-  padding: 0 4px !important;
-  font-size: 13px;
-  text-align: center;
-}
-
-.table-form-field .mat-mdc-text-field-wrapper {
-  padding-bottom: 0;
-}
-
-.table-form-field .mat-mdc-form-field-subscript-wrapper {
-  display: none;
-}
-
-.table-form-field .mat-mdc-form-field-bottom-align {
-  padding-top: 0;
-}
-
-/* Compact Material form field in table */
-::ng-deep .table-form-field {
-  font-size: 12px;
-  height: 40px;
-  overflow: visible;
-  margin: 0;
-}
-
-::ng-deep .table-form-field .mat-mdc-text-field-wrapper {
-  padding-bottom: 0;
-  padding-top: 0;
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-::ng-deep .table-form-field .mat-mdc-form-field-subscript-wrapper {
-  display: none;
-}
-
-::ng-deep .table-form-field .mdc-text-field {
-  height: 40px;
-  margin: 0;
-  display: flex;
-  align-items: center;
-}
-
-::ng-deep .table-form-field .mdc-text-field__input {
-  padding: 0 8px !important;
-  font-size: 12px;
-  height: 40px;
-  line-height: 40px;
-  vertical-align: middle;
-  margin: 0;
-  border: none;
-}
-
-::ng-deep .table-form-field .mdc-floating-label {
-  font-size: 12px;
-  top: 12px;
-  left: 12px;
-  display: none;
-}
-
-::ng-deep .table-form-field .mdc-floating-label--float-above {
-  font-size: 11px;
-  top: 2px;
-  display: block;
-}
-
-::ng-deep .table-form-field .mat-mdc-form-field-icon-prefix,
-::ng-deep .table-form-field .mat-mdc-form-field-icon-suffix {
-  align-self: center;
-  height: 44px;
-  display: flex;
-  align-items: center;
-}
-
-.full-width {
-  width: 100%;
-}
-
-.total-cell {
-  width: 100px;
-  font-weight: 600;
-  color: #667eea;
-  font-size: 14px;
-  text-align: right;
-  white-space: nowrap;
-}
-
+/* Grand total sticky footer */
 .grand-total {
-  position: sticky;
-  bottom: 0;
-  text-align: right;
-  padding: 16px;
-  font-size: 18px;
-  color: white;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  margin: 0;
-  box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+  position: sticky; bottom: 0;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white; text-align: right;
+  padding: 14px 16px; font-size: 16px; font-weight: 800;
+  letter-spacing: -0.2px;
+  box-shadow: 0 -4px 16px rgba(79,70,229,0.25);
+  border-radius: 0;
   z-index: 100;
 }
 
-mat-form-field {
-  margin: 0;
-}
+/* Empty state */
+.empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; background: white; border-radius: 12px; margin: 12px 0; }
+.empty-state mat-icon { font-size: 64px; width: 64px; height: 64px; color: #cbd5e1; }
+.empty-state p { font-size: 15px; margin-top: 12px; color: #64748b; }
 
-/* Inline invoice list card */
-.invoice-list-card {
-  margin-top: 16px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-}
-
+/* Invoice list card */
+.invoice-list-card { margin-top: 14px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; overflow: hidden; }
 .invoice-list-table { width: 100%; border-collapse: collapse; }
-.invoice-list-table th, .invoice-list-table td { padding: 8px 10px; border-bottom: 1px solid #eee; }
-.hover-items { background: #fafafa; padding: 8px; border-left: 4px solid #667eea; }
-.hover-items ul { margin: 6px 0 0 14px; padding: 0; }
-.hover-items li { margin: 2px 0; font-size: 13px; color: #333; }
+.invoice-list-table th, .invoice-list-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+.invoice-list-table th { background: #f8fafc; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: #64748b; }
 
-/* Ensure action buttons row is visible */
-.action-buttons { background: transparent; }
-
-.empty-state {
-  text-align: center;
-  padding: 80px 20px;
-  color: #999;
-  background: white;
-  border-radius: 8px;
-  margin: 16px 0;
-}
-
-.empty-state mat-icon {
-  font-size: 72px;
-  width: 72px;
-  height: 72px;
-  color: #ddd;
-}
-
-/* Mobile responsive table and form styles */
-@media (max-width: 768px) {
-  .saved-invoices-section {
-    padding: 0 8px;
-  }
-
-  /* Form fields - reduce padding */
-  mat-form-field {
-    width: 100%;
-  }
-
-  /* Table adjustments */
-  .table-container {
-    margin-top: 4px;
-  }
-
-  .invoice-table th {
-    padding: 8px 4px;
-    font-size: 11px;
-    top: 140px;
-  }
-
-  .invoice-table td {
-    padding: 3px 4px;
-    height: 40px;
-  }
-
-  .invoice-table tbody tr {
-    height: 40px;
-  }
-
-  /* Table cell width adjustments */
-  .sl-no-cell {
-    width: 28px;
-    padding: 3px 2px;
-    font-size: 11px;
-  }
-
-  .product-cell {
-    min-width: 110px;
-  }
-
-  .quantity-cell {
-    width: 55px;
-  }
-
-  .rate-cell {
-    width: 65px;
-  }
-
-  .total-cell {
-    width: 65px;
-    font-size: 11px;
-  }
-
-  .action-cell {
-    width: 32px;
-    padding: 3px 2px;
-  }
-
-  /* Form field text size in table */
-  ::ng-deep .table-form-field {
-    font-size: 12px;
-    height: 40px;
-  }
-
-  ::ng-deep .table-form-field .mdc-text-field {
-    height: 40px;
-  }
-
-  ::ng-deep .table-form-field .mdc-text-field__input {
-    font-size: 12px;
-    padding: 0 8px !important;
-    height: 40px;
-    line-height: 40px;
-  }
-
-  ::ng-deep .table-form-field .mdc-floating-label--float-above {
-    font-size: 10px;
-  }
-
-  ::ng-deep .table-form-field .mat-mdc-form-field-icon-prefix,
-  ::ng-deep .table-form-field .mat-mdc-form-field-icon-suffix {
-    height: 40px;
-  }
-
-  .empty-state {
-    padding: 40px 20px;
-  }
-
-  .empty-state mat-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
-  }
-}
-
-/* Extra small mobile devices */
-@media (max-width: 480px) {
-  .invoice-table th {
-    padding: 6px 2px;
-    font-size: 10px;
-  }
-
-  .invoice-table td {
-    padding: 2px 3px;
-    height: 36px;
-  }
-
-  .invoice-table tbody tr {
-    height: 36px;
-  }
-
-  /* Make columns even narrower */
-  .sl-no-cell {
-    width: 24px;
-    font-size: 10px;
-  }
-
-  .product-cell {
-    min-width: 95px;
-  }
-
-  .quantity-cell {
-    width: 45px;
-  }
-
-  .rate-cell {
-    width: 55px;
-  }
-
-  .total-cell {
-    width: 55px;
-    font-size: 10px;
-  }
-
-  .action-cell {
-    width: 28px;
-  }
-
-  ::ng-deep .table-form-field {
-    font-size: 11px;
-    height: 36px;
-  }
-
-  ::ng-deep .table-form-field .mdc-text-field {
-    height: 36px;
-  }
-
-  ::ng-deep .table-form-field .mdc-text-field__input {
-    font-size: 11px;
-    padding: 0 6px !important;
-    height: 36px;
-    line-height: 36px;
-  }
-
-  ::ng-deep .table-form-field .mat-mdc-form-field-icon-prefix,
-  ::ng-deep .table-form-field .mat-mdc-form-field-icon-suffix {
-    height: 36px;
-    width: 28px;
-  }
-
-  mat-card-header {
-    padding: 12px;
-  }
-
-  mat-card-title {
-    font-size: 16px;
-  }
-}
-
-.empty-state p {
-  font-size: 16px;
-  margin-top: 16px;
-}
-
-mat-form-field {
-  margin: 0;
-}
-
-/* Mobile-first: Hide Sl.No column on small screens */
+/* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .quick-invoice-container {
-    padding: 0;
-  }
-  
-  .invoice-card {
-    margin: 0;
-  }
-  
-  mat-card-header {
-    position: relative;
-  }
-  
-  .customer-section {
-    position: relative;
-    top: 0;
-  }
-  
-  .action-buttons {
-    position: relative;
-    top: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    justify-content: center;
-    align-items: center;
-    padding: 8px 4px;
-  }
-  
-  .action-buttons button {
-    font-size: 12px;
-    height: 44px;
-    padding: 0;
-    min-width: 44px;
-    flex: 0 1 calc(25% - 4px);
-    max-width: calc(25% - 4px);
-  }
-  
-  .action-buttons button mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
-  
-  .invoice-table th {
-    position: relative;
-    top: 0;
-    padding: 8px 4px;
-    font-size: 11px;
-  }
-  
-  .table-container {
-    margin-left: 0;
-    margin-right: 0;
-  }
-  
-  .invoice-table th,
-  .invoice-table td {
-    padding: 6px 4px;
-    font-size: 12px;
-    height: 50px;
-  }
-  
-  .invoice-table tbody tr {
-    height: 50px;
-  }
-  
-  .invoice-table th:first-child,
-  .invoice-table td:first-child {
-    display: none;
-  }
-  
-  .product-cell {
-    min-width: 150px;
-  }
-  
-  .quantity-cell {
-    width: 70px;
-  }
-  
-  .rate-cell {
-    width: 80px;
-  }
-  
-  .total-cell {
-    width: 80px;
-    font-size: 12px;
-  }
-  
-  .action-cell {
-    width: 40px;
-  }
-  
-  mat-card-title {
-    font-size: 18px;
-  }
-  
-  .grand-total {
-    font-size: 16px;
-    padding: 12px;
-  }
-  
-  ::ng-deep .table-form-field .mdc-text-field {
-    height: 40px;
-    display: flex;
-    align-items: center;
-  }
-  
-  ::ng-deep .table-form-field .mdc-text-field__input {
-    padding: 0 8px !important;
-    font-size: 12px;
-    height: 40px;
-    line-height: 40px;
-    vertical-align: middle;
-    margin: 0;
-  }
+  .quick-invoice-container { background: white; }
+  mat-card-header { position: relative !important; top: 0 !important; }
+  .customer-section { position: relative !important; top: 0 !important; background: white; }
+  .action-buttons { position: relative !important; top: 0 !important; background: white; padding: 8px 4px 12px; }
+  .action-buttons button { width: 42px !important; height: 42px !important; min-width: 42px !important; border-radius: 10px !important; }
+  .invoice-table th { position: relative !important; top: 0 !important; }
+  .grand-total { position: relative !important; bottom: 0 !important; border-radius: 12px !important; margin-top: 8px; }
+  /* Hide Sl.No on mobile */
+  .invoice-table th:first-child, .invoice-table td:first-child { display: none; }
 }
 
-/* Tablet and up */
 @media (min-width: 601px) {
-  .quick-invoice-container {
-    padding: 16px;
-  }
-  
-  .invoice-card {
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    width: auto;
-    margin: 0 auto;
-    min-height: auto;
-  }
-  
-  mat-card-header {
-    border-radius: 8px 8px 0 0;
-    position: relative;
-  }
-  
-  .action-buttons {
-    position: relative;
-    top: 0;
-  }
-  
-  .invoice-table th {
-    position: relative;
-    top: 0;
-  }
-  
-  .grand-total {
-    position: relative;
-    border-radius: 8px;
-    margin-top: 16px;
-  }
+  .quick-invoice-container { padding: 16px; background: #f8fafc; }
+  .invoice-card { border-radius: 16px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.09) !important; min-height: auto !important; }
+  mat-card-header { border-radius: 16px 16px 0 0 !important; position: relative !important; }
+  .customer-section, .action-buttons { position: relative !important; top: 0 !important; }
+  .invoice-table th { position: relative !important; top: 0 !important; }
+  .grand-total { border-radius: 0 0 16px 16px !important; position: relative !important; }
 }

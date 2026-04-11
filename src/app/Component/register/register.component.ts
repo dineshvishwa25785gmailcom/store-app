@@ -85,7 +85,7 @@ export class RegisterComponent implements OnInit {
           this.toastr.success('OTP sent to your email. Please check your inbox.', 'Verify Email');
         } else {
           this.logger.error('RegisterComponent', 'Registration failed', response);
-          this.toastr.error(response?.message || 'Registration failed', 'Error');
+          this.toastr.error(response?.errorMessage || response?.message || 'Registration failed', 'Error');
         }
       },
       error: (error: any) => {

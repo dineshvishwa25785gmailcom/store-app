@@ -200,11 +200,14 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.otpVerifyLoading = false;
         // Improved error handling for 401/500
         if (error?.status === 401) {
-          this.otpErrorMessage = 'Unauthorized. Your OTP may be invalid or expired. Please try again.';
+          // 401 could mean OTP is invalid or email not recognized
+          this.otpErrorMessage = error?.error?.errorMessage || error?.error?.message || 'Invalid OTP or email. Please check and try again.';
         } else if (error?.status === 500) {
           this.otpErrorMessage = 'Server error during OTP verification. Please try again later.';
+        } else if (error?.status === 400) {
+          this.otpErrorMessage = error?.error?.errorMessage || error?.error?.message || 'OTP verification failed. Please try again or request a new OTP.';
         } else {
-          this.otpErrorMessage = error?.error?.message || 'Failed to verify OTP. Please try again or request a new OTP.';
+          this.otpErrorMessage = error?.error?.errorMessage || error?.error?.message || 'Failed to verify OTP. Please try again or request a new OTP.';
         }
         this.toastr.error(this.otpErrorMessage, 'Verification Error');
         console.error('OTP verification error:', error); // Debug log

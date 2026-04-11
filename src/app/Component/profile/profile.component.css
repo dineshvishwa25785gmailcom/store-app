@@ -1,192 +1,69 @@
-.profile-container {
-  padding: 24px;
-  max-width: 920px;
-  margin: 0 auto;
-}
+/* PROFILE PAGE */
+.profile-page { padding: 24px; max-width: 720px; margin: 0 auto; }
 
-.profile-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
+/* Page header with avatar */
+.profile-page-header { margin-bottom: 24px; }
+.profile-avatar-block { display: flex; align-items: center; gap: 20px; padding: 24px; background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 16px; color: white; }
+.profile-avatar { width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 3px solid rgba(255,255,255,0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.profile-avatar mat-icon { font-size: 44px; width: 44px; height: 44px; color: white; }
+.profile-name { font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.3px; }
+.profile-email { font-size: 13px; opacity: 0.85; margin: 0 0 8px; }
+.profile-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; }
+.profile-badge mat-icon { font-size: 13px; width: 13px; height: 13px; }
 
-.profile-header h1 {
-  font-size: 28px;
-  margin-bottom: 10px;
-  color: #1976d2;
-}
+/* Form card */
+.profile-card { border-radius: 16px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important; }
+.profile-card-header { padding: 20px 24px 12px !important; border-bottom: 1px solid #f1f5f9; }
+.profile-card-header mat-card-title { font-size: 17px !important; font-weight: 700 !important; color: #0f172a !important; }
+.profile-card-header mat-card-subtitle { color: #64748b !important; margin-top: 4px !important; }
 
-.profile-header p {
-  font-size: 14px;
-  color: #666;
-}
+/* Form content */
+.profile-form-content { padding: 20px 24px !important; }
+.mobile-info-btn { display: none; margin-bottom: 16px; border-radius: 10px !important; font-size: 13px !important; }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.field-full { width: 100%; display: block; }
+.opt-label { font-size: 11px; font-weight: 400; color: #94a3b8; }
+.req-star { color: #dc2626; }
 
-.profile-card {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  position: relative;
-}
+/* Form validation enhancement */
+mat-form-field.ng-invalid.ng-touched .mat-mdc-text-field-wrapper { border-color: #dc2626 !important; }
 
-mat-card-header {
-  padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
+/* Actions */
+.profile-actions { padding: 16px 24px !important; border-top: 1px solid #f1f5f9; display: flex; gap: 10px; }
+.save-btn {
+  border-radius: 10px !important; height: 44px !important; font-weight: 700 !important;
+  font-size: 14px !important; display: flex !important; align-items: center !important; gap: 6px !important;
+  min-width: 140px;
 }
+.cancel-btn { border-radius: 10px !important; height: 44px !important; font-weight: 600 !important; display: flex !important; align-items: center !important; gap: 6px !important; }
+.btn-spinner { display: inline-block; margin-right: 4px; }
 
-mat-card-content {
-  padding: 20px;
-}
+/* Info dialog */
+.info-dialog-inner { padding: 24px; text-align: center; min-width: 280px; }
+.info-avatar { width: 64px; height: 64px; border-radius: 50%; background: #eef2ff; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+.info-avatar mat-icon { font-size: 40px; width: 40px; height: 40px; color: #4f46e5; }
+.info-dialog-inner h3 { margin: 0 0 6px; font-size: 18px; font-weight: 700; color: #0f172a; }
+.info-email { font-size: 13px; color: #64748b; margin: 0 0 10px; }
+.info-hint  { font-size: 12px; color: #94a3b8; margin: 0; }
 
-.profile-grid {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  flex-wrap: nowrap;
-}
+/* Logout dialog */
+.logout-dialog { padding: 28px 24px; text-align: center; max-width: 360px; }
+.logout-icon { width: 56px; height: 56px; border-radius: 50%; background: #eff6ff; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.logout-icon mat-icon { font-size: 32px; width: 32px; height: 32px; color: #4f46e5; }
+.logout-dialog h3 { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 8px; }
+.logout-dialog p  { font-size: 14px; color: #64748b; margin: 0 0 20px; }
+.logout-dialog button { border-radius: 10px !important; height: 44px !important; font-weight: 700 !important; min-width: 180px; }
 
-.left-panel {
-  width: 260px;
-  min-width: 200px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 10px;
-  border-left: 1px solid #f0f0f0;
-}
-
-.avatar {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  background: #e8f0fe;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-
-.avatar mat-icon {
-  font-size: 56px;
-  color: #1976d2;
-}
-
-.info h3 {
-  margin: 6px 0 4px 0;
-  font-size: 18px;
-}
-
-.info .email {
-  font-size: 13px;
-  color: #666;
-  word-break: break-word;
-}
-
-.info .hint {
-  font-size: 12px;
-  color: #999;
-  margin-top: 8px;
-}
-
-.right-panel {
-  flex: 1 1 0;
-  min-width: 320px;
-}
-
-.mobile-info-toggle {
-  display: inline-flex;
-  margin-bottom: 12px;
-}
-
-/* Info panel hidden by default, becomes overlay when `visible` */
-.info-dialog {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-.info-dialog .avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: #e8f0fe;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.info-dialog .avatar mat-icon {
-  font-size: 48px;
-  color: #1976d2;
-}
-.info-dialog .info h3 {
-  margin: 0 0 6px 0;
-}
-
-/* Hide info panel on mobile unless toggled visible */
-/* mobile-only hiding handled inside media query */
-
-/* RESPONSIVE: for narrow screens stack vertically and show editable first */
-@media (max-width: 767px) {
-  .profile-container {
-    padding: 12px;
-    max-width: 100%;
-  }
-  .profile-grid {
-    flex-direction: column-reverse; /* editable first, info last */
-    gap: 12px;
-  }
-  .left-panel {
-    width: 100%;
-    border-right: none;
-    border-top: 1px solid #f0f0f0;
-    padding-top: 12px;
-  }
-  .right-panel {
-    min-width: 0;
-  }
-  .mobile-info-toggle {
-    display: inline-flex;
-  }
-  /* When info panel is hidden, keep its placeholder collapsed */
-  .info-panel.mobile-hidden {
-    display: none;
-  }
-}
-
-/* On larger screens, ensure info panel is not shown inline (it will be an overlay when visible) */
-@media (min-width: 768px) {
-  .info-panel.mobile-hidden {
-    display: none;
-  }
-}
-
-.full-width {
-  width: 100%;
-  display: block;
-  margin-bottom: 15px;
-}
-
-mat-form-field {
-  margin-top: 15px;
-}
-
-mat-card-actions {
-  padding: 15px 20px;
-  border-top: 1px solid #e0e0e0;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-
-.action-buttons button {
-  min-width: 120px;
-}
-
-mat-icon {
-  margin-right: 8px;
-}
-
-mat-spinner {
-  display: inline-block;
-  margin-right: 8px;
+/* Responsive */
+@media (max-width: 640px) {
+  .profile-page { padding: 16px 12px; }
+  .profile-avatar-block { flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px; }
+  .profile-avatar { width: 56px; height: 56px; }
+  .profile-avatar mat-icon { font-size: 34px; width: 34px; height: 34px; }
+  .form-row-2 { grid-template-columns: 1fr; }
+  .mobile-info-btn { display: flex; width: 100%; }
+  .profile-form-content { padding: 16px !important; }
+  .profile-actions { padding: 12px 16px !important; flex-direction: column; }
+  .save-btn, .cancel-btn { width: 100% !important; justify-content: center !important; }
+  .profile-card-header { padding: 16px !important; }
 }

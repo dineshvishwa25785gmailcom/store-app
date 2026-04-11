@@ -1,5 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { MaterialModule } from '../../material.module';
 import {
   FormArray,
@@ -18,11 +18,12 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../_service/authentication.service';
 import { IpService } from '../../_service/ip.service';
-import { catchError } from 'rxjs';
+import { catchError, takeUntil } from 'rxjs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'; // ✅ Correct import
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
 
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -35,6 +36,9 @@ import { DecimalFormatterService } from '../../utils/decimal-formatter.service';
 import {  ViewChild, ElementRef } from '@angular/core';
 
 import { APP_CONSTANTS } from '../../_model/app-constants';
+import { PaymentDialogComponent } from '../ledger/payment-dialog/payment-dialog.component';
+import { PaymentDetailsDialogComponent } from '../ledger/payment-details-dialog/payment-details-dialog.component';
+import { CustomerDetailsDialogComponent } from '../ledger/customer-details-dialog/customer-details-dialog.component';
 
 @Component({
   selector: 'app-createinvoice',
@@ -50,7 +54,7 @@ import { APP_CONSTANTS } from '../../_model/app-constants';
   templateUrl: './createinvoice.component.html',
   styleUrl: './createinvoice.component.css',
 })
-export class CreateinvoiceComponent implements OnInit {
+export class CreateinvoiceComponent implements OnInit, OnDestroy {
 
 
 
@@ -76,6 +80,13 @@ export class CreateinvoiceComponent implements OnInit {
   selectedInvoiceDate: Date | null = null;
   //updateDate: string = new Date().toISOString();
   invoiceform!: FormGroup; // Declare the form variable
+  
+  // Customer action properties
+  selectedCustomerId: string = '';
+  selectedCustomerName: string = '';
+  showCustomerActions = false;
+  private destroy$ = new Subject<void>();
+
   constructor(
     private builder: FormBuilder,
     private service: MasterService,
@@ -87,7 +98,8 @@ export class CreateinvoiceComponent implements OnInit {
     private authService: AuthService,
     private ipService: IpService,
     private cdr: ChangeDetectorRef,
-    public decimalFormatter: DecimalFormatterService
+    public decimalFormatter: DecimalFormatterService,
+    private dialog: MatDialog
   ) {}
   ipAddress: string = '';
   pagetitle = 'Create Invoice';
@@ -120,6 +132,12 @@ export class CreateinvoiceComponent implements OnInit {
       this.SetEditInfo(this.editinvoiceno);
     }
   }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   initializeForm() {
     this.totalAmountSubject.next(0);
     this.invoiceform = this.builder.group({
@@ -182,6 +200,12 @@ export class CreateinvoiceComponent implements OnInit {
           this.selectedInvoiceDate = invoiceDate;
           
           this.editinvoiceno = editdata.invoiceNumber;
+          
+          // Trigger customer change to show action buttons and load outstanding amount
+          if (editdata.customerId) {
+            this.customerchange(editdata.customerId);
+          }
+          
           this.cdr.detectChanges();
         }
       },
@@ -460,6 +484,12 @@ export class CreateinvoiceComponent implements OnInit {
   customerchange(selectedCustomer: string) {
     let customercode = this.invoiceform.get('customerId')?.value;
     
+    // Set selected customer info for action buttons
+    this.selectedCustomerId = customercode;
+    const customer = this.mastercustomer.find(c => c.uniqueKeyID === customercode);
+    this.selectedCustomerName = customer?.name || '';
+    this.showCustomerActions = !!customercode;
+    
     // Fetch customer address and destination
     this.service.GetCustomerbycode(customercode).subscribe({
       next: (res) => {
@@ -588,6 +618,83 @@ export class CreateinvoiceComponent implements OnInit {
 
   setValueWithThreeDecimal(value: number): number {
     return Math.round(value * 1000) / 1000; // Rounds to 3 decimal places
+  }
+
+  /**
+   * View customer details
+   */
+  viewCustomer(customerId: string): void {
+    if (!customerId) return;
+    this.ledgerService.getCustomerLedger(customerId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          const customer = response.data || response;
+          
+          if (customer && customer.customerId) {
+            this.dialog.open(CustomerDetailsDialogComponent, {
+              width: '1000px',
+              data: { customer }
+            });
+          } else {
+            this.alert.error('Failed to load customer details', 'Error');
+          }
+        },
+        error: (err) => {
+          this.alert.error('Error loading customer details: ' + err.message, 'Error');
+        }
+      });
+  }
+
+  /**
+   * View payments for a customer - opens modal with payment history
+   */
+  viewPayments(customerId: string, customerName: string): void {
+    if (!customerId) return;
+
+    const dialogRef = this.dialog.open(PaymentDetailsDialogComponent, {
+      width: '900px',
+      data: { customerId, customerName: customerName || 'Customer' }
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(() => {
+      // Dialog closed
+    });
+  }
+
+  /**
+   * Send reminder
+   */
+  sendReminder(customerId: string, customerName: string): void {
+    if (!customerId) return;
+    this.alert.info(`Sending reminder to ${customerName}...`, 'Reminder');
+    // TODO: Implement send reminder functionality
+  }
+
+  /**
+   * Prompt user for payment amount and optional invoice, then record the payment
+   */
+  openPaymentPrompt(): void {
+    if (!this.selectedCustomerId) return;
+
+    const dialogRef = this.dialog.open(PaymentDialogComponent, {
+      width: '420px',
+      data: { 
+        customerId: this.selectedCustomerId, 
+        customerName: this.selectedCustomerName, 
+        companyId: this.companyId 
+      }
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result: any) => {
+      if (result?.ok) {
+        this.alert.success('Payment recorded successfully', 'Payment');
+        // Refresh outstanding amount after payment
+        this.loadOutstandingAmount(this.selectedCustomerId);
+      } else if (result?.error) {
+        this.alert.error(result.error || 'Failed to record payment', 'Payment');
+      }
+    });
   }
 
   get totalAmountValue(): number {

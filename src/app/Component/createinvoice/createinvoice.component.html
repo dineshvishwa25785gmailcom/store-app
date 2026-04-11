@@ -70,6 +70,28 @@
                 </mat-form-field>
             </div>
 
+            <!-- Customer Action Buttons -->
+            <div *ngIf="showCustomerActions" class="customer-actions-section">
+                <div class="customer-actions-header">
+                    <h3>Customer Actions</h3>
+                    <p class="customer-name">{{ selectedCustomerName }}</p>
+                </div>
+                <div class="customer-actions-buttons">
+                    <button mat-raised-button type="button" (click)="viewCustomer(selectedCustomerId)" color="primary">
+                        <mat-icon>visibility</mat-icon> View Details
+                    </button>
+                    <button mat-raised-button type="button" (click)="viewPayments(selectedCustomerId, selectedCustomerName)" color="info">
+                        <mat-icon>receipt_long</mat-icon> View Payments
+                    </button>
+                    <button mat-raised-button type="button" (click)="openPaymentPrompt()" color="warn">
+                        <mat-icon>attach_money</mat-icon> Record Payment
+                    </button>
+                    <button mat-raised-button type="button" (click)="sendReminder(selectedCustomerId, selectedCustomerName)" color="accent">
+                        <mat-icon>mail</mat-icon> Send Reminder
+                    </button>
+                </div>
+            </div>
+
             <div class="product-section">
                
 

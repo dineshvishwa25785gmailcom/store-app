@@ -186,6 +186,12 @@ export class ProductComponent implements OnInit {
     this.service.GetProducts().subscribe({
       next: (res: any) => {
         this.productList = res || [];
+        // Sort by uniqueKeyID in descending order
+        this.productList.sort((a, b) => {
+          const keyA = a.uniqueKeyID || '';
+          const keyB = b.uniqueKeyID || '';
+          return keyB.localeCompare(keyA, undefined, { numeric: true });
+        });
         this.totalProducts = this.productList.length;
         this.activeProducts = this.productList.filter(p => p.isActive).length;
       },

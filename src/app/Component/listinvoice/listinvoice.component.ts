@@ -1,4 +1,5 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MaterialModule } from '../../material.module';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -24,20 +25,16 @@ interface Invoice {
 @Component({
   selector: 'app-listinvoice',
   standalone: true,
-  imports: [MaterialModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, MaterialModule, ReactiveFormsModule, RouterLink],
   templateUrl: './listinvoice.component.html',
   styleUrls: ['./listinvoice.component.css'],
 })
-export class ListinvoiceComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = [
-    'invoiceNumber',
-    'invDate',
-    'cuName',
-    'coName',
-    'totalAmt',
-    'actions',
-  ];
+export class ListinvoiceComponent implements OnInit, AfterViewInit, OnDestroy {
+  displayedColumns: string[] = ['invoiceNumber', 'invDate', 'cuName', 'totalAmt', 'actions'];
   dataSource = new MatTableDataSource<Invoice>();
+
+  loading = false;
+  isMobile = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -49,7 +46,14 @@ export class ListinvoiceComponent implements OnInit, AfterViewInit {
     private alert: ToastrService,
     private router: Router,
     private dialog: MatDialog
-  ) {}
+  ) {
+    this.checkMobile();
+    window.addEventListener('resize', () => this.checkMobile());
+  }
+
+  private checkMobile(): void {
+    this.isMobile = window.innerWidth <= 768;
+  }
 
   ngOnInit(): void {
     this.LoadInvoice();
@@ -59,10 +63,10 @@ export class ListinvoiceComponent implements OnInit, AfterViewInit {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
     
-    // Set default sorting by invoice number (ascending) using setTimeout to avoid ExpressionChangedAfterItHasBeenCheckedError
+    // Set default sorting by invoice number (descending) using setTimeout to avoid ExpressionChangedAfterItHasBeenCheckedError
     setTimeout(() => {
       if (this.sort) {
-        this.sort.sort({ id: 'invoiceNumber', start: 'asc', disableClear: false });
+        this.sort.sort({ id: 'invoiceNumber', start: 'desc', disableClear: false });
       }
     }, 0);
   }
@@ -73,6 +77,7 @@ export class ListinvoiceComponent implements OnInit, AfterViewInit {
   }
 
   LoadInvoice() {
+    this.loading = true;
     this.service.GetAllInvoice()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -109,8 +114,8 @@ export class ListinvoiceComponent implements OnInit, AfterViewInit {
               // ensure the datasource has the MatSort reference
               this.dataSource.sort = this.sort;
 
-              // programmatically set active sort to invoiceNumber ascending
-              this.sort.sort({ id: 'invoiceNumber', start: 'asc', disableClear: false });
+              // programmatically set active sort to invoiceNumber descending
+              this.sort.sort({ id: 'invoiceNumber', start: 'desc', disableClear: false });
 
               // force-sort the data so the UI shows sorted rows immediately
               try {
@@ -130,9 +135,11 @@ export class ListinvoiceComponent implements OnInit, AfterViewInit {
           } else {
             this.alert.error('Invalid response format', 'Error');
           }
+          this.loading = false;
         },
         error: (err) => {
           this.alert.error('Failed to load invoices.', 'Error');
+          this.loading = false;
         },
       });
   }
@@ -237,6 +244,32 @@ export class ListinvoiceComponent implements OnInit, AfterViewInit {
         },
         error: (err) => {
           this.alert.error(`Failed to preview invoice ${invoiceno}`, 'Error');
+        },
+      });
+  }
+
+  DownloadStatementPDF(invoiceno: string) {
+    this.service.GenerateStatementAccountPdf(invoiceno)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          if (res.body && res.body.size > 0) {
+            const blob: Blob = res.body as Blob;
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.download = `Statement_${invoiceno.replace('/', '_')}.pdf`;
+            a.href = url;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            this.alert.success(`Statement downloaded for ${invoiceno}`, 'Success');
+          } else {
+            this.alert.error('PDF file is empty', 'Error');
+          }
+        },
+        error: (err) => {
+          this.alert.error(`Failed to download statement for ${invoiceno}`, 'Error');
         },
       });
   }

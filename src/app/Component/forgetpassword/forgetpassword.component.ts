@@ -13,7 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'app-forgetpassword',
   standalone: true,
-  imports: [MaterialModule, FormsModule, ReactiveFormsModule, CommonModule, MatIconModule],
+  imports: [MaterialModule, FormsModule, ReactiveFormsModule, CommonModule, MatIconModule, RouterLink],
   templateUrl: './forgetpassword.component.html',
   styleUrl: './forgetpassword.component.css'
 })
@@ -115,7 +115,8 @@ export class ForgetpasswordComponent implements OnInit {
   }
 
   /**
-   * Step 2: Verify OTP and move to password reset
+   * Step 2: Verify OTP format and move to password reset
+   * (Full OTP validation will happen on backend during password reset)
    */
   verifyOtpAndProceed(): void {
     if (this.otpForm.invalid) {
@@ -123,9 +124,19 @@ export class ForgetpasswordComponent implements OnInit {
       return;
     }
 
-    // Move to password reset step without verification (OTP will be verified on reset)
+    // Client-side validation: OTP should be 6 digits
+    const otp = this.otpForm.get('otp')?.value;
+    if (!/^[0-9]{6}$/.test(otp)) {
+      this.toastr.error('OTP must be exactly 6 digits', 'Invalid OTP Format');
+      return;
+    }
+    
+    this.logger.info('ForgetpasswordComponent', 'OTP format validated, proceeding to password reset', { otpLength: otp?.length });
+    // OTP is valid format, move to password reset step
+    // Full OTP validation will happen on backend when submitting password + OTP together
     this.currentStep = 'reset';
     this.resetForm.reset();
+    this.toastr.info('OTP accepted. Please enter your new password.', 'Enter Password');
   }
 
   /**

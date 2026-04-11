@@ -81,6 +81,21 @@ export class MasterService {
     );
   }
 
+  GenerateStatementAccountPdf(invoiceno: string) {
+    const encodedInvoiceNo = encodeURIComponent(invoiceno);
+    const url = `${this.baseUrl}Invoice/${encodedInvoiceNo}/statement-account-pdf`;
+
+    return this.http.get(url, {
+      observe: 'response',
+      responseType: 'blob',
+    }).pipe(
+      catchError((error) => {
+        console.error(`Error fetching statement account PDF for ${invoiceno}:`, error);
+        return throwError(() => new Error('Failed to download statement account PDF'));
+      })
+    );
+  }
+
   // Master endpoints
   GetCategories() {
     return this.http.get(this.baseUrl + 'Master/CatGetAll')

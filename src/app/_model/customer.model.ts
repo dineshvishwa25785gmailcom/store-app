@@ -1,20 +1,24 @@
 export interface customer {
+  recId?: number;
   uniqueKeyID: string;
   name: string;
+  customer_company: string;
   email: string;
+  emailId?: string;
   phone: string;
+  mobileNo: string;
+  alternateMobile?: string;
   isActive: boolean;
   addressDetails: string;
-  countryCode: string;
-  countryName: string;
-  stateCode: string;
-  stateName: string;
-  mobileNo: string;
-  alternateMobile: string;
-  customer_company: string;
-  gst_number: string;
-  updateDate: string;
-  createIp: string;
-  updateIp: string;
-  statusname?: string; // optional if not used in API
+  createDate?: string;
+  updateDate?: string;
+  createIp?: string;
+  updateIp?: string;
+  countryCode?: string;
+  countryName?: string;
+  stateCode?: string;
+  stateName?: string;
+  gst_number?: string;
+  companyId?: string;
+  statusname?: string;
 }

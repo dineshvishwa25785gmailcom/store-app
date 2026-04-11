@@ -342,6 +342,15 @@ export class UserService {
     return this.http.post<ApiResponse>(this.baseUrl + 'UserRole/asignrolepermission', data);
   }
 
+  /** Alias for new naming convention */
+  getRoles(): Observable<Roles[]> {
+    return this.getAllRoles();
+  }
+
+  getMenus(): Observable<Menus[]> {
+    return this.getAllMenus();
+  }
+
   handleError(error: any): Observable<never> {
     return throwError(() => error);
   }
