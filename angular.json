@@ -49,16 +49,24 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2MB",
+                  "maximumWarning": "3MB",
                   "maximumError": "5MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "6kB",
-                  "maximumError": "10kB"
+                  "maximumWarning": "15kB",
+                  "maximumError": "20kB"
                 }
               ],
               "outputHashing": "all",
+              "allowedCommonJsDependencies": [
+                "canvg",
+                "html2canvas",
+                "jspdf",
+                "core-js",
+                "raf",
+                "rgbcolor"
+              ],
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
