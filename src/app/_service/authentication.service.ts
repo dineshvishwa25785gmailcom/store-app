@@ -16,8 +16,19 @@ export class AuthService {
   private isAuthenticated = signal(false);
   public isAuthenticated$ = this.isAuthenticated.asReadonly(); // Expose as readonly signal
   private refreshTokenTimeout: any;
+  private inactivityTimeout: any;
   private userEmail = new BehaviorSubject<string>('');
   public userEmail$ = this.userEmail.asObservable();
+  
+  // Session timeout settings (configurable)
+  private readonly TOKEN_EXPIRY_MINUTES = 15; // Backend token expiry
+  private readonly TOKEN_REFRESH_INTERVAL = 12 * 60 * 1000; // 12 minutes - refresh before expiry
+  private readonly INACTIVITY_TIMEOUT_MINUTES = 30; // Session timeout after inactivity
+  private inactivityTimer: any;
+  
+  // Session expiry warning subject
+  private sessionExpiryWarning = new BehaviorSubject<{ willExpionIn: number } | null>(null);
+  public sessionExpiryWarning$ = this.sessionExpiryWarning.asObservable();
 
   constructor(
     private http: HttpClient,
@@ -161,8 +172,9 @@ export class AuthService {
     
     this.isAuthenticated.set(true);
     
-    // Set up automatic token refresh
+    // Set up automatic token refresh and inactivity tracking
     this.scheduleTokenRefresh();
+    this.startInactivityTimer();
   }
 
   /**
@@ -318,6 +330,9 @@ export class AuthService {
    * Logout user and clear credentials
    */
   logout(): void {
+    console.log('AUTH_SERVICE: Logging out user...');
+    
+    // Clear all storage
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('username');
@@ -325,11 +340,20 @@ export class AuthService {
     localStorage.removeItem('companyid');
     this.isAuthenticated.set(false);
     this.userEmail.next('');
+    this.sessionExpiryWarning.next(null);
     
-    // Clear refresh timeout
+    // Clear all timers
     if (this.refreshTokenTimeout) {
       clearTimeout(this.refreshTokenTimeout);
+      this.refreshTokenTimeout = null;
     }
+    
+    if (this.inactivityTimer) {
+      clearTimeout(this.inactivityTimer);
+      this.inactivityTimer = null;
+    }
+    
+    console.log('AUTH_SERVICE: User logged out successfully');
   }
 
   /**
@@ -363,26 +387,68 @@ export class AuthService {
 
   /**
    * Schedule automatic token refresh before expiry
-   * Tokens typically expire after 15 minutes, refresh after 10 minutes
+   * Tokens expire after 15 minutes, refresh after 12 minutes for safety
    */
   private scheduleTokenRefresh(): void {
-    const refreshInterval = 10 * 60 * 1000; // 10 minutes in milliseconds
-    
     if (this.refreshTokenTimeout) {
       clearTimeout(this.refreshTokenTimeout);
     }
-
+    
+    // Refresh after 12 minutes, leaving 3-minute safety buffer before 15-minute expiry
     this.refreshTokenTimeout = setTimeout(() => {
       this.refreshToken().subscribe({
         next: (response) => {
-          console.log('Token refreshed successfully');
+          console.log('AUTH_SERVICE: Token refreshed successfully');
+          // Reset inactivity timer on successful refresh
+          this.resetInactivityTimer();
         },
         error: () => {
-          console.error('Token refresh failed, logging out');
+          console.error('AUTH_SERVICE: Token refresh failed, logging out');
           this.logout();
         }
       });
-    }, refreshInterval);
+    }, this.TOKEN_REFRESH_INTERVAL);
+    
+    console.log('AUTH_SERVICE: Token refresh scheduled in', this.TOKEN_REFRESH_INTERVAL / 1000 / 60, 'minutes');
+  }
+  
+  /**
+   * Start inactivity timer for auto-logout after 30 minutes of no activity
+   */
+  private startInactivityTimer(): void {
+    this.resetInactivityTimer();
+  }
+  
+  /**
+   * Reset inactivity timer - called on user activity
+   */
+  resetInactivityTimer(): void {
+    if (this.inactivityTimer) {
+      clearTimeout(this.inactivityTimer);
+    }
+    
+    const inactivityMs = this.INACTIVITY_TIMEOUT_MINUTES * 60 * 1000;
+    
+    this.inactivityTimer = setTimeout(() => {
+      if (this.isAuthenticated()) {
+        console.warn('AUTH_SERVICE: User inactive for', this.INACTIVITY_TIMEOUT_MINUTES, 'minutes. Logging out...');
+        this.logout();
+      }
+    }, inactivityMs);
+  }
+  
+  /**
+   * Get configured inactivity timeout in minutes
+   */
+  getInactivityTimeoutMinutes(): number {
+    return this.INACTIVITY_TIMEOUT_MINUTES;
+  }
+  
+  /**
+   * Get configured token refresh interval in minutes
+   */
+  getTokenRefreshIntervalMinutes(): number {
+    return this.TOKEN_REFRESH_INTERVAL / 1000 / 60;
   }
 
   /**

@@ -172,6 +172,8 @@ export class PaymentDetailsDialogComponent implements OnInit {
           this.toastr.success(`Payment ${payment.paymentNumber} deleted successfully`, 'Payment Deleted');
           // Reload payments list
           this.loadPayments();
+          // Close dialog with success flag so parent can refresh outstanding amounts
+          this.dialogRef.close({ ok: true, paymentDeleted: true, customerId: this.data.customerId });
         } else {
           this.toastr.error('Failed to delete payment: ' + (response.errorMessage || 'Unknown error'), 'Error');
         }

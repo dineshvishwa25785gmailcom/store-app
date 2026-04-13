@@ -85,6 +85,9 @@ export class CreateinvoiceComponent implements OnInit, OnDestroy {
   selectedCustomerId: string = '';
   selectedCustomerName: string = '';
   showCustomerActions = false;
+  private apiCustomerId: string = ''; // Store original customer ID from API response for edit mode
+  private originalInvoiceAmount: number = 0; // Store original invoice amount for edit mode (to adjust outstanding)
+  private fullOutstandingAmount: number = 0; // Full outstanding before adjustment
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -183,6 +186,12 @@ export class CreateinvoiceComponent implements OnInit, OnDestroy {
           // Convert date string to Date object
           const invoiceDate = editdata.invoiceDate ? new Date(editdata.invoiceDate) : null;
           
+          // Store the original customer ID from API response
+          this.apiCustomerId = editdata.customerId || '';
+          
+          // Store the original invoice amount (for outstanding calculation adjustment)
+          this.originalInvoiceAmount = editdata.totalAmount || 0;
+          
           this.invoiceform.patchValue({
             invoiceYear: editdata.invoiceYear || '',
             invoiceNumber: editdata.displayInvNumber || '',
@@ -200,6 +209,9 @@ export class CreateinvoiceComponent implements OnInit, OnDestroy {
           this.selectedInvoiceDate = invoiceDate;
           
           this.editinvoiceno = editdata.invoiceNumber;
+          
+          // Disable customer dropdown in edit mode by disabling the form control
+          this.invoiceform.get('customerId')?.disable();
           
           // Trigger customer change to show action buttons and load outstanding amount
           if (editdata.customerId) {
@@ -298,6 +310,9 @@ export class CreateinvoiceComponent implements OnInit, OnDestroy {
     const username = this.authService.getUsername() || '';
     if (this.isedit) {
       this.invoiceform.patchValue({ updateBy: username });
+      // In edit mode, restore the original customer ID from API response
+      // This ensures we don't accidentally change the customer when saving
+      this.invoiceform.patchValue({ customerId: this.apiCustomerId }, { emitEvent: false });
     } else {
       this.invoiceform.patchValue({ createBy: username });
     }
@@ -511,9 +526,11 @@ export class CreateinvoiceComponent implements OnInit, OnDestroy {
 
   /**
    * Load outstanding/balance amount for selected customer
+   * In edit mode, adjusts the outstanding to exclude the current invoice being edited
    */
   loadOutstandingAmount(customerId: string): void {
     if (!customerId) {
+      this.fullOutstandingAmount = 0;
       this.outstandingAmount = 0;
       return;
     }
@@ -534,18 +551,40 @@ export class CreateinvoiceComponent implements OnInit, OnDestroy {
             0;
           
           if (typeof outstanding === 'number' && outstanding >= 0) {
-            this.outstandingAmount = outstanding;
+            // Store full outstanding amount
+            this.fullOutstandingAmount = outstanding;
+            
+            // In edit mode, adjust outstanding by subtracting the current invoice amount
+            // This prevents double-counting since the current invoice is already in the outstanding
+            if (this.isedit && this.originalInvoiceAmount > 0) {
+              console.log('OUTSTANDING_CALC: Edit mode - Adjusting outstanding');
+              console.log('OUTSTANDING_CALC: Full Outstanding:', this.fullOutstandingAmount);
+              console.log('OUTSTANDING_CALC: Original Invoice Amount:', this.originalInvoiceAmount);
+              
+              // Calculate adjusted outstanding (previous outstanding before current invoice)
+              const adjustedOutstanding = Math.max(0, outstanding - this.originalInvoiceAmount);
+              this.outstandingAmount = adjustedOutstanding;
+              
+              console.log('OUTSTANDING_CALC: Adjusted Outstanding:', this.outstandingAmount);
+              console.log('OUTSTANDING_CALC: Calculation: ' + outstanding + ' - ' + this.originalInvoiceAmount + ' = ' + this.outstandingAmount);
+            } else {
+              // In create mode, use full outstanding
+              this.outstandingAmount = outstanding;
+            }
           } else {
+            this.fullOutstandingAmount = 0;
             this.outstandingAmount = 0;
           }
           this.cdr.detectChanges();
         } else {
+          this.fullOutstandingAmount = 0;
           this.outstandingAmount = 0;
         }
         this.isLoadingOutstanding = false;
       },
       error: (err) => {
         this.alert.warning(`Could not load outstanding amount for customer: ${err.message}`, 'Warning');
+        this.fullOutstandingAmount = 0;
         this.outstandingAmount = 0;
         this.isLoadingOutstanding = false;
       }
@@ -657,8 +696,11 @@ export class CreateinvoiceComponent implements OnInit, OnDestroy {
       data: { customerId, customerName: customerName || 'Customer' }
     });
 
-    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(() => {
-      // Dialog closed
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result: any) => {
+      // If payment was deleted, refresh outstanding amounts
+      if (result?.ok && result?.paymentDeleted && result?.customerId) {
+        this.loadOutstandingAmount(result.customerId);
+      }
     });
   }
 
@@ -699,6 +741,25 @@ export class CreateinvoiceComponent implements OnInit, OnDestroy {
 
   get totalAmountValue(): number {
     return this.totalAmountSubject.value;
+  }
+
+  /**
+   * Get display outstanding amount
+   * In edit mode, this shows the adjusted outstanding (excluding current invoice)
+   * In create mode, this shows the full outstanding
+   */
+  get displayOutstandingAmount(): number {
+    return this.outstandingAmount;
+  }
+
+  /**
+   * Get display total to pay amount
+   * Calculation: Previous Outstanding (adjusted in edit mode) + Current Invoice Amount
+   * In create mode: Full Outstanding + New Invoice Amount
+   * In edit mode: (Full Outstanding - Original Invoice) + Updated Invoice Amount
+   */
+  get displayTotalToPayAmount(): number {
+    return this.outstandingAmount + this.totalAmountValue;
   }
 
 }

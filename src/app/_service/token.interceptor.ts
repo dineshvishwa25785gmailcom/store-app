@@ -58,6 +58,9 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
     tap(response => {
       if (response.type === 4) { // 4 = HttpResponse
         logger.logApiResponse(req.method, req.url, response.status, response.body);
+        // Reset inactivity timer on successful API response
+        // This keeps user logged in as long as they're actively using the app
+        authService.resetInactivityTimer();
       }
     }),
     catchError((error: any) => {

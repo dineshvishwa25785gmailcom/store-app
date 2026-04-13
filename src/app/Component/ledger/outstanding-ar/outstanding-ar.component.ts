@@ -203,8 +203,11 @@ export class OutstandingARComponent implements OnInit, OnDestroy, AfterViewInit 
       data: { customerId, customerName: customerName || 'Customer' }
     });
 
-    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(() => {
-      // Modal closed, no action needed
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result: any) => {
+      // If payment was deleted, refresh outstanding data
+      if (result?.ok && result?.paymentDeleted) {
+        this.refreshData();
+      }
     });
   }
 
