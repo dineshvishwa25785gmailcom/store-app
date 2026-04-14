@@ -3,6 +3,55 @@
    ============================================================ */
 
 /* Toolbar */
+
+
+
+.brand-logo {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+  margin-bottom: 2px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,.2));
+}
+
+.brand-title {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin: 0 0 8px;
+}
+
+.brand-sub {
+  font-size: 14px;
+  opacity: 0.7;
+  margin: 0 0 32px;
+}
+
+.brand-tagline {
+  font-size: 16px;
+  opacity: 0.85;
+  line-height: 1.6;
+  max-width: 280px;
+  margin: 0 auto 24px;
+}
+
+.brand-pills {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.pill {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+
 .mat-toolbar {
   position: sticky; top: 0; z-index: 1000; height: 60px;
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;

@@ -94,6 +94,27 @@
 .auth-form-inner {
   width: 100%;
   max-width: 400px;
+  position: relative;
+}
+/* Header right-side home link (login) */
+.header-home-link {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  color: #64748b;
+  text-decoration: none;
+  border: 1px solid #e2e8f0;
+  transition: all .15s;
+}
+.header-home-link:hover {
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 /* Mobile logo (shown only on mobile) */
@@ -129,6 +150,13 @@
   font-size: 14px;
   color: #64748b;
   margin: 0 0 24px;
+}
+/* External link shown before subtitle */
+.form-subtitle .external-link {
+  color: #4f46e5;
+  font-weight: 600;
+  text-decoration: none;
+  margin-right: 8px;
 }
 
 /* Info / success banner */
@@ -204,6 +232,21 @@
   margin: 8px 0 20px;
 }
 
+/* Centered Home link between checkbox and forgot-password */
+.home-link {
+  font-size: 13px;
+  color: #4f46e5;
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: auto;
+  margin-right: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+}
+.home-link:hover { text-decoration: underline; }
+
 /* Submit button */
 .submit-btn {
   width: 100%;
@@ -217,6 +260,14 @@
   justify-content: center !important;
   gap: 8px !important;
   margin-bottom: 16px;
+}
+
+.submit-btn mat-icon {
+  font-size: 20px !important;
+  height: 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* Link text */
