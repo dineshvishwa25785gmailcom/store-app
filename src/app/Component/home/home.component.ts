@@ -9,6 +9,7 @@ import { UserService } from '../../_service/user.service';
 import { AuthService } from '../../_service/authentication.service';
 import { CustomerService } from '../../_service/customer.service';
 import { MasterService } from '../../_service/master.service';
+import { LedgerService } from '../../_service/ledger.service';
 import { Company } from '../../_model/company.model';
 
 @Component({
@@ -38,6 +39,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private customerSvc: CustomerService,
     private masterSvc: MasterService,
+    private ledgerSvc: LedgerService,
     private dialog: MatDialog
   ) {}
 
@@ -77,6 +79,22 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.loading = false;
       }
     });
+
+    // Load AR summary (total A/R, total due/overdue) for KPI cards
+    const companyId = this.authService.getCompanyId();
+    if (companyId) {
+      this.ledgerSvc.getCompanySummary(companyId).pipe(takeUntil(this.destroy$)).subscribe({
+        next: (resp: any) => {
+          const summary = resp?.data || {};
+          this.totalAR = summary?.totalAR || 0;
+          this.overdueAmount = summary?.totalDue || 0;
+        },
+        error: () => {
+          this.totalAR = 0;
+          this.overdueAmount = 0;
+        }
+      });
+    }
   }
 
   openCompanyDetails(): void {

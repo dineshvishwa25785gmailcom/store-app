@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MaterialModule } from '../../../material.module';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { LedgerService } from '../../../_service/ledger.service';
 import { paymentEntryRequest } from '../../../_model/ledger.model';
 import { take } from 'rxjs/operators';
@@ -17,7 +18,10 @@ interface DialogData {
   selector: 'app-payment-dialog',
   standalone: true,
   imports: [CommonModule, MaterialModule, ReactiveFormsModule],
-  templateUrl: './payment-dialog.component.html'
+  templateUrl: './payment-dialog.component.html',
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'en-GB' } // Use dd/MM/yyyy display for this dialog
+  ]
 })
 export class PaymentDialogComponent {
   form: any;
@@ -35,15 +39,18 @@ export class PaymentDialogComponent {
     this.form = this.fb.group({
       invoiceNumber: [''],
       amountPaid: [null, [Validators.required, Validators.min(0.01)]],
-      paymentDate: [new Date().toISOString(), Validators.required],
-      paymentMethod: ['Bank Transfer', Validators.required],
+      // Use Date object for mat-datepicker; provider sets locale to en-GB (dd/MM/yyyy)
+      paymentDate: [new Date(), Validators.required],
+      // Default payment method should be Cash
+      paymentMethod: ['Cash', Validators.required],
       reference: [''],
       chequeNumber: [''],
       chequeBank: [''],
       chequeBranch: [''],
-      chequeDate: [''],
+      // Date fields left null until user selects
+      chequeDate: [null],
       transactionId: [''],
-      transactionDate: ['']
+      transactionDate: [null]
     });
 
     // No invoice lookup: invoice not required for payment
@@ -77,8 +84,33 @@ export class PaymentDialogComponent {
     const toISO = (input: any) => {
       if (!input) return undefined;
       try {
-        const d = new Date(input);
-        if (isNaN(d.getTime())) return undefined;
+        let d: Date | undefined;
+
+        if (input instanceof Date) {
+          d = input;
+        } else if (typeof input === 'string') {
+          // Try native parse first (ISO)
+          d = new Date(input);
+          if (isNaN(d.getTime())) {
+            // Try dd/MM/yyyy or dd-MM-yyyy
+            const m = input.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+            if (m) {
+              const day = Number(m[1]);
+              const month = Number(m[2]) - 1;
+              const year = Number(m[3]);
+              d = new Date(year, month, day);
+            } else {
+              return undefined;
+            }
+          }
+        } else if (input && typeof input === 'object' && typeof (input as any).toDate === 'function') {
+          // moment-like
+          d = (input as any).toDate();
+        } else {
+          d = new Date(input);
+        }
+
+        if (!d || isNaN(d.getTime())) return undefined;
         return d.toISOString();
       } catch {
         return undefined;

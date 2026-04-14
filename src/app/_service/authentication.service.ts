@@ -1,6 +1,6 @@
 // Removed duplicate loginWithPassword() definition outside the class
 import { Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -22,7 +22,7 @@ export class AuthService {
   
   // Session timeout settings (configurable)
   private readonly TOKEN_EXPIRY_MINUTES = 15; // Backend token expiry
-  private readonly TOKEN_REFRESH_INTERVAL = 12 * 60 * 1000; // 12 minutes - refresh before expiry
+  private readonly TOKEN_REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes - FOR TESTING (change back to 12 * 60 * 1000 after testing)
   private readonly INACTIVITY_TIMEOUT_MINUTES = 30; // Session timeout after inactivity
   private inactivityTimer: any;
   
@@ -358,31 +358,116 @@ export class AuthService {
 
   /**
    * Refresh the authentication token
+   * Enhanced with better error handling and logging
    */
   refreshToken(): Observable<LoginResponse> {
     const refreshToken = localStorage.getItem('refreshToken');
-    
+    const token = localStorage.getItem('token');
+    const userRole = localStorage.getItem('userrole');
+    const username = this.getUsername();
+
+    console.log('AUTH_SERVICE: Starting token refresh...');
+    console.log('AUTH_SERVICE: Has refresh token:', !!refreshToken);
+    console.log('AUTH_SERVICE: Has access token:', !!token);
+    console.log('AUTH_SERVICE: Has user role:', !!userRole);
+    console.log('AUTH_SERVICE: Username:', username);
+
+    // Require at minimum the refresh token
     if (!refreshToken) {
+      console.error('AUTH_SERVICE: No refresh token available in localStorage');
       this.logout();
       return throwError(() => new Error('No refresh token available'));
     }
 
-    return this.http.post<LoginResponse>(
-      `${this.baseUrl}Authorize/GenerateRefreshToken`,
-      { refreshToken }
-    ).pipe(
-      tap(response => {
-        const username = this.getUsername();
-        if (username && response) {
-          this.login(response, username);
+    if (!username) {
+      console.error('AUTH_SERVICE: No username available, cannot complete refresh');
+      this.logout();
+      return throwError(() => new Error('No username available for token refresh'));
+    }
+
+    const url = `${this.baseUrl}Authorize/GenerateRefreshToken`;
+
+    // Build a list of payload/option attempts to try sequentially.
+    const attempts: Array<{ body: any; options?: { headers?: HttpHeaders } }> = [];
+
+    // 1) Preferred payload: include token + refreshToken + userRole (Authorization header will be added by interceptor)
+    attempts.push({ body: { token: token, refreshToken: refreshToken, userRole: userRole } });
+
+    // 2) Try only refreshToken and skip Authorization header (some servers expect this)
+    attempts.push({ body: { refreshToken: refreshToken }, options: { headers: new HttpHeaders({ 'X-Skip-Auth': 'true' }) } });
+
+    // 3) If userRole exists, try sending it with refreshToken but without Authorization header
+    if (userRole) {
+      attempts.push({ body: { refreshToken: refreshToken, userRole: userRole }, options: { headers: new HttpHeaders({ 'X-Skip-Auth': 'true' }) } });
+      const capitalized = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+      if (capitalized !== userRole) {
+        attempts.push({ body: { refreshToken: refreshToken, userRole: capitalized }, options: { headers: new HttpHeaders({ 'X-Skip-Auth': 'true' }) } });
+      }
+      const upper = userRole.toUpperCase();
+      if (upper !== userRole && upper !== capitalized) {
+        attempts.push({ body: { refreshToken: refreshToken, userRole: upper }, options: { headers: new HttpHeaders({ 'X-Skip-Auth': 'true' }) } });
+      }
+    }
+
+    return new Observable<LoginResponse>(subscriber => {
+      let lastError: any = null;
+
+      const tryAttempt = (index: number) => {
+        if (index >= attempts.length) {
+          console.error('AUTH_SERVICE: All refresh attempts failed. Last error:', lastError);
+          // If last error looks like a network error, propagate it so scheduler can retry
+          if (lastError && (lastError.status === 0 || !lastError.status)) {
+            subscriber.error(lastError);
+            return;
+          }
+          // Otherwise logout and report failure
+          this.logout();
+          subscriber.error(lastError || new Error('Token refresh failed'));
+          return;
         }
-      }),
-      catchError(error => {
-        // If refresh fails, logout user
-        this.logout();
-        return throwError(() => new Error('Token refresh failed'));
-      })
-    );
+
+        const att = attempts[index];
+        console.log('AUTH_SERVICE: Attempting token refresh attempt', index + 1, 'with payload keys', Object.keys(att.body));
+
+        const http$ = this.http.post<LoginResponse>(url, att.body, att.options || {});
+        const sub = http$.subscribe({
+          next: (response) => {
+            console.log('AUTH_SERVICE: Token refresh successful on attempt', index + 1);
+            if (response && response.token) {
+              this.login(response, username || '');
+              subscriber.next(response);
+              subscriber.complete();
+            } else {
+              console.error('AUTH_SERVICE: Response missing token field on attempt', index + 1, response);
+              lastError = new Error('Response missing token field');
+              tryAttempt(index + 1);
+            }
+          },
+          error: (err) => {
+            console.error('AUTH_SERVICE: Refresh attempt', index + 1, 'failed with status', err?.status);
+            lastError = err;
+
+            // Network error: propagate to let scheduler retry
+            if (err && (err.status === 0 || !err.status)) {
+              subscriber.error(err);
+              return;
+            }
+
+            // Try next attempt for 400/401 (validation or mismatch)
+            if (err && (err.status === 400 || err.status === 401)) {
+              tryAttempt(index + 1);
+              return;
+            }
+
+            // Other errors: logout and propagate
+            this.logout();
+            subscriber.error(err);
+          }
+        });
+      };
+
+      tryAttempt(0);
+    });
   }
 
   /**
@@ -396,15 +481,33 @@ export class AuthService {
     
     // Refresh after 12 minutes, leaving 3-minute safety buffer before 15-minute expiry
     this.refreshTokenTimeout = setTimeout(() => {
+      console.log('AUTH_SERVICE: Token refresh timer triggered');
       this.refreshToken().subscribe({
         next: (response) => {
           console.log('AUTH_SERVICE: Token refreshed successfully');
           // Reset inactivity timer on successful refresh
           this.resetInactivityTimer();
+          // Schedule next refresh
+          this.scheduleTokenRefresh();
         },
-        error: () => {
-          console.error('AUTH_SERVICE: Token refresh failed, logging out');
-          this.logout();
+        error: (err) => {
+          console.error('AUTH_SERVICE: Token refresh failed:', err);
+          const status = err?.status;
+          // 400/401 -> invalid or unauthorized refresh token: logout
+          if (status === 400 || status === 401) {
+            console.error('AUTH_SERVICE: Refresh token invalid or unauthorized, logging out');
+            this.logout();
+          } else if (status === 0 || !status) {
+            // Network error - retry after short delay
+            console.warn('AUTH_SERVICE: Network error during token refresh, retrying in 30 seconds');
+            setTimeout(() => {
+              this.scheduleTokenRefresh();
+            }, 30000);
+          } else {
+            // Other unexpected errors - logout for safety
+            console.warn('AUTH_SERVICE: Unexpected error during token refresh, logging out');
+            this.logout();
+          }
         }
       });
     }, this.TOKEN_REFRESH_INTERVAL);

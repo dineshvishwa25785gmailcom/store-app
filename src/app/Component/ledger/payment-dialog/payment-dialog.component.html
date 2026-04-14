@@ -26,7 +26,7 @@
 
   <mat-form-field appearance="outline" style="width:100%">
     <mat-label>Receipt Date</mat-label>
-    <input matInput [matDatepicker]="receiptPicker" formControlName="paymentDate">
+    <input matInput [matDatepicker]="receiptPicker" formControlName="paymentDate" placeholder="dd/MM/yyyy">
     <mat-datepicker-toggle matSuffix [for]="receiptPicker"></mat-datepicker-toggle>
     <mat-datepicker #receiptPicker></mat-datepicker>
     <mat-error *ngIf="form.get('paymentDate')?.hasError('invalidDate')">Invalid receipt date</mat-error>
@@ -51,7 +51,7 @@
 
     <mat-form-field appearance="outline" style="width:100%">
       <mat-label>Cheque Date</mat-label>
-      <input matInput [matDatepicker]="chequePicker" formControlName="chequeDate">
+      <input matInput [matDatepicker]="chequePicker" formControlName="chequeDate" placeholder="dd/MM/yyyy">
       <mat-datepicker-toggle matSuffix [for]="chequePicker"></mat-datepicker-toggle>
       <mat-datepicker #chequePicker></mat-datepicker>
       <mat-error *ngIf="form.get('chequeDate')?.hasError('invalidDate')">Invalid cheque date</mat-error>
@@ -67,7 +67,7 @@
 
     <mat-form-field appearance="outline" style="width:100%">
       <mat-label>Transaction Date</mat-label>
-      <input matInput [matDatepicker]="transPicker" formControlName="transactionDate">
+      <input matInput [matDatepicker]="transPicker" formControlName="transactionDate" placeholder="dd/MM/yyyy">
       <mat-datepicker-toggle matSuffix [for]="transPicker"></mat-datepicker-toggle>
       <mat-datepicker #transPicker></mat-datepicker>
       <mat-error *ngIf="form.get('transactionDate')?.hasError('invalidDate')">Invalid transaction date</mat-error>
