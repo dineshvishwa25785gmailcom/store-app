@@ -22,7 +22,7 @@ export class AuthService {
   
   // Session timeout settings (configurable)
   private readonly TOKEN_EXPIRY_MINUTES = 15; // Backend token expiry
-  private readonly TOKEN_REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes - FOR TESTING (change back to 12 * 60 * 1000 after testing)
+  private readonly TOKEN_REFRESH_INTERVAL = 12 * 60 * 1000; // 2 minutes - FOR TESTING (change back to 12 * 60 * 1000 after testing)
   private readonly INACTIVITY_TIMEOUT_MINUTES = 30; // Session timeout after inactivity
   private inactivityTimer: any;
   
