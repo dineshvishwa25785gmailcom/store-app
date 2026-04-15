@@ -43,6 +43,16 @@ import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dial
           <td mat-cell *matCellDef="let element">{{ element.rateWithTax | currency:'INR' }}</td>
         </ng-container>
 
+        <ng-container matColumnDef="purchaseRate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Purchase Rate</th>
+            <td mat-cell *matCellDef="let element"><span class="purchase-highlight">{{ element.purchaseRate | currency:'INR' }}</span></td>
+        </ng-container>
+        
+          <ng-container matColumnDef="purchaseRateDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Purchase Date</th>
+            <td mat-cell *matCellDef="let element"><span class="purchase-highlight">{{ element.purchaseRateDate | date:'dd-MM-yyyy' }}</span></td>
+          </ng-container>
+
         <ng-container matColumnDef="isActive">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
           <td mat-cell *matCellDef="let element">
@@ -68,7 +78,7 @@ import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dial
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       </table>
 
-      <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+        <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-raised-button mat-dialog-close>Close</button>
@@ -95,12 +105,13 @@ import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dial
     .status-badge { padding: 6px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 500; display: inline-block; }
     .chip-active { background-color: #4caf50 !important; color: white; }
     .chip-inactive { background-color: #f44336 !important; color: white; }
+      .purchase-highlight { background-color: #8B0000 !important; color: #fff !important; padding: 4px 8px; border-radius: 6px; display: inline-block; }
     @media (max-width: 768px) { mat-dialog-content { min-width: 90vw; } }
   `]
 })
 export class ProductListDialogComponent implements OnInit {
   dataSource: any;
-  displayedColumns: string[] = ['productName', 'categoryCode', 'price', 'isActive', 'actions'];
+  displayedColumns: string[] = ['productName', 'categoryCode', 'price', 'purchaseRate', 'purchaseRateDate', 'isActive', 'actions'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -177,6 +188,9 @@ export class ProductComponent implements OnInit {
       totalGstRate: [{value: 18, disabled: true}, [Validators.required, Validators.min(0)]],
       rateWithoutTax: [{value: 0, disabled: true}, Validators.min(0)],
       rateWithTax: [0, [Validators.required, Validators.min(0)]],
+      // Purchase fields
+      purchaseRate: [null, [Validators.min(0)]],
+      purchaseRateDate: [null],
       remark: [''],
       isActive: [true]
     });
@@ -268,6 +282,8 @@ export class ProductComponent implements OnInit {
       totalGstRate: product.totalGstRate,
       rateWithoutTax: product.rateWithoutTax,
       rateWithTax: product.rateWithTax,
+      purchaseRate: product.purchaseRate,
+      purchaseRateDate: product.purchaseRateDate ? new Date(product.purchaseRateDate) : null,
       remark: product.remark,
       isActive: product.isActive
     });
@@ -293,7 +309,7 @@ export class ProductComponent implements OnInit {
     this.isEditMode = false;
     this.editProductCode = '';
     this.showExtraFields = false;
-    this.productForm.reset({ isActive: true, rateWithTax: 0 });
+    this.productForm.reset({ isActive: true, rateWithTax: 0, purchaseRate: null, purchaseRateDate: null });
     this.productForm.patchValue({ cgstRate: 9, scgstRate: 9, totalGstRate: 18, rateWithoutTax: 0 });
   }
 }

@@ -77,6 +77,19 @@
           <mat-icon matPrefix>currency_rupee</mat-icon>
         </mat-form-field>
 
+        <mat-form-field appearance="outline">
+          <mat-label>Purchase Rate</mat-label>
+          <input matInput type="number" formControlName="purchaseRate" placeholder="0.00">
+          <mat-icon matPrefix>price_check</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Purchase Rate Date</mat-label>
+          <input matInput [matDatepicker]="purchaseRatePicker" formControlName="purchaseRateDate" placeholder="Choose a date">
+          <mat-datepicker-toggle matSuffix [for]="purchaseRatePicker"></mat-datepicker-toggle>
+          <mat-datepicker #purchaseRatePicker></mat-datepicker>
+        </mat-form-field>
+
         <div class="checkbox-field">
           <mat-checkbox [(ngModel)]="showExtraFields" [ngModelOptions]="{standalone: true}">
             Show Extra Fields
@@ -107,6 +120,8 @@
             <input matInput type="number" formControlName="totalGstRate" placeholder="0">
             <mat-icon matPrefix>percent</mat-icon>
           </mat-form-field>
+
+          
         </div>
 
         <mat-form-field appearance="outline">

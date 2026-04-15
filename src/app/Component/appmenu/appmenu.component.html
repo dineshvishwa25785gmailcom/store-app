@@ -10,7 +10,7 @@
     </div>
 
     <!-- Company name -->
-    <span class="company-display" *ngIf="companyName">{{ companyName }}</span>
+    <!-- <span class="company-display" *ngIf="companyName">{{ companyName }}</span> -->
 
     <span class="example-spacer"></span>
     <span>{{Loginuser}}</span>
@@ -43,9 +43,9 @@
         <mat-list-item>
           <button mat-button routerLink=""><mat-icon>home</mat-icon>Home</button>
         </mat-list-item>
-        <mat-list-item>
+        <!-- <mat-list-item>
           <button mat-button routerLink="/quick-invoice"><mat-icon>calculate</mat-icon>Quick Invoice</button>
-        </mat-list-item>
+        </mat-list-item> -->
         @for(item of menulist(); track item.menucode){
           <mat-list-item>
             <button mat-button [routerLink]="getMenuRoute(item.menucode)">
