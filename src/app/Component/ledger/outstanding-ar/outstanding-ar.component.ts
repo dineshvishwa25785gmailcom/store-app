@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '../../../material.module';
 import { LedgerService } from '../../../_service/ledger.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -19,13 +20,13 @@ import { customerOutstanding, paymentEntryRequest, ledgerApiResponse } from '../
 @Component({
   selector: 'app-outstanding-ar',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, FormsModule, MaterialModule],
   templateUrl: './outstanding-ar.component.html',
   styleUrls: ['./outstanding-ar.component.css']
 })
 export class OutstandingARComponent implements OnInit, OnDestroy, AfterViewInit {
   // Data properties
-  displayedColumns: string[] = ['customerName', 'balance', 'daysOutstanding', 'lastPaymentDate', 'status', 'actions'];
+  displayedColumns: string[] = ['customerName', 'totalInvoiced', 'totalPaid', 'balance', 'daysOutstanding', 'lastPaymentDate', 'status', 'actions'];
   dataSource = new MatTableDataSource<customerOutstanding>();
 
   // UI properties
@@ -34,6 +35,38 @@ export class OutstandingARComponent implements OnInit, OnDestroy, AfterViewInit 
   companyId: string = '';
   currentPage = 1;
   pageSize = 10;
+  totalRecords = 0;
+  showFilters = false;  // Toggle filter panel visibility
+
+  // Filter properties
+  filterSearchName: string = '';
+  filterShowOnlyOverdue: boolean = false;
+  filterNeverPaid: boolean = false;
+  filterIncludeFullyPaid: boolean = false;
+  filterMinOutstanding: number | null = null;
+  filterMaxOutstanding: number | null = null;
+  filterMinDaysOverdue: number = 0;
+  filterMinLastPaymentDays: number | null = null;
+  filterAgeingBucket: string = '';
+  filterSortBy: string = 'outstanding';
+  
+  // Sort options
+  sortOptions = [
+    { label: 'Outstanding Amount', value: 'outstanding' },
+    { label: 'Days Overdue', value: 'daysOverdue' },
+    { label: 'Customer Name', value: 'name' },
+    { label: 'Last Payment Date', value: 'lastPaymentDate' },
+    { label: 'Highest Outstanding', value: 'highestOutstanding' }
+  ];
+  
+  // Ageing bucket options
+  ageingBucketOptions = [
+    { label: 'All', value: '' },
+    { label: '0-30 Days', value: '0-30' },
+    { label: '31-60 Days', value: '31-60' },
+    { label: '61-90 Days', value: '61-90' },
+    { label: '90+ Days', value: '90+' }
+  ];
 
   // ViewChild references
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -56,8 +89,20 @@ export class OutstandingARComponent implements OnInit, OnDestroy, AfterViewInit 
   }
 
   ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
+    // Only setup paginator/sort if they exist (may be undefined if loading is true)
+    if (this.paginator) {
+      this.dataSource.paginator = this.paginator;
+      // Server-side pagination: listen to paginator events
+      this.paginator.page.pipe(takeUntil(this.destroy$)).subscribe(() => {
+        this.currentPage = this.paginator.pageIndex + 1;
+        this.pageSize = this.paginator.pageSize;
+        this.loadOutstandingCustomers();
+      });
+    }
+    
+    if (this.sort) {
+      this.dataSource.sort = this.sort;
+    }
   }
 
   ngOnDestroy(): void {
@@ -72,13 +117,42 @@ export class OutstandingARComponent implements OnInit, OnDestroy, AfterViewInit 
     this.loading = true;
     this.error = null;
 
-    this.ledgerService.getCustomersOutstanding(this.companyId, this.currentPage, this.pageSize)
+    // Build filters object - only include non-default/meaningful filter values
+    const filters: any = {};
+    
+    // Only add filters if they have meaningful values (not defaults)
+    if (this.filterSearchName) filters.customerName = this.filterSearchName;
+    if (this.filterShowOnlyOverdue) filters.showOnlyOverdue = true;
+    if (this.filterNeverPaid) filters.neverPaid = true;
+    if (this.filterIncludeFullyPaid) filters.includeFullyPaid = true;
+    if (this.filterMinOutstanding != null) filters.minOutstanding = this.filterMinOutstanding;
+    if (this.filterMaxOutstanding != null) filters.maxOutstanding = this.filterMaxOutstanding;
+    if (this.filterMinDaysOverdue > 0) filters.minDaysOverdue = this.filterMinDaysOverdue;
+    if (this.filterMinLastPaymentDays != null) filters.minLastPaymentDays = this.filterMinLastPaymentDays;
+    if (this.filterAgeingBucket) filters.ageingBucket = this.filterAgeingBucket;
+    
+    // Only add sortBy if it's not the default
+    if (this.filterSortBy !== 'outstanding') filters.sortBy = this.filterSortBy;
+
+    // Pass filters only if any are set, otherwise pass undefined (no filters)
+    const hasFilters = Object.keys(filters).length > 0;
+    
+    this.ledgerService.getCustomersOutstanding(this.companyId, this.currentPage, this.pageSize, hasFilters ? filters : undefined)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
+          console.debug('[Outstanding AR] API response:', response);
           if (response.result === 'pass' && response.data) {
             const customers = Array.isArray(response.data) ? response.data : [response.data];
+            console.debug('[Outstanding AR] Mapped customers before assigning to table:', customers);
             this.dataSource.data = customers as customerOutstanding[];
+            // pagination metadata
+            this.totalRecords = response.totalRecords ?? response.totalCount ?? customers.length;
+            // Update paginator if available
+            if (this.paginator) {
+              try { this.paginator.length = this.totalRecords; } catch { /* ignore */ }
+              this.paginator.pageIndex = (response.currentPage ? (response.currentPage - 1) : (this.currentPage - 1));
+            }
           } else {
             this.error = response.errorMessage || 'Failed to load outstanding customers';
             this.toastr.error('Failed to load data', 'Error');
@@ -94,7 +168,50 @@ export class OutstandingARComponent implements OnInit, OnDestroy, AfterViewInit 
   }
 
   /**
-   * Apply filter to table
+   * Apply filters and reload data
+   */
+  applyFilters(): void {
+    this.currentPage = 1; // Reset to first page when applying filters
+    this.loadOutstandingCustomers();
+    this.toastr.success('Filters applied', 'Success');
+  }
+
+  /**
+   * Reset all filters to default values
+   */
+  resetFilters(): void {
+    this.filterSearchName = '';
+    this.filterShowOnlyOverdue = false;
+    this.filterNeverPaid = false;
+    this.filterIncludeFullyPaid = false;
+    this.filterMinOutstanding = null;
+    this.filterMaxOutstanding = null;
+    this.filterMinDaysOverdue = 0;
+    this.filterMinLastPaymentDays = null;
+    this.filterAgeingBucket = '';
+    this.filterSortBy = 'outstanding';
+    this.currentPage = 1;
+    this.loadOutstandingCustomers();
+    this.toastr.success('Filters reset', 'Success');
+  }
+
+  /**
+   * Toggle filter panel visibility
+   */
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+  }
+
+  /**
+   * Refresh data (clear filters and reload)
+   */
+  refreshData(): void {
+    this.resetFilters();
+  }
+
+  /**
+   * Apply filter to table (for local search in dataSource)
+   * Note: This is for client-side filtering. Server-side filtering uses applyFilters()
    */
   applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value;
@@ -151,6 +268,35 @@ export class OutstandingARComponent implements OnInit, OnDestroy, AfterViewInit 
     if (daysOutstanding <= 60) return 'Overdue';
     if (daysOutstanding <= 90) return 'Heavily Overdue';
     return 'Severely Overdue';
+  }
+
+  /**
+   * Check if customer is overpaid (Total Paid > Total Invoiced)
+   * Returns calculated balance as: Total Invoiced - Total Paid
+   * If negative, customer has overpaid
+   */
+  getCalculatedBalance(totalInvoiced: number, totalPaid: number): number {
+    return totalInvoiced - totalPaid;
+  }
+
+  /**
+   * Get CSS class for balance display (green if overpaid, red if owed)
+   */
+  getBalanceStatusCss(totalInvoiced: number, totalPaid: number): string {
+    const balance = this.getCalculatedBalance(totalInvoiced, totalPaid);
+    if (balance < 0) return 'balance-overpaid';    // Green for overpaid
+    if (balance === 0) return 'balance-settled';    // Blue/neutral for settled
+    return 'balance-outstanding';                   // Red for owed
+  }
+
+  /**
+   * Get label for balance status
+   */
+  getBalanceStatusLabel(totalInvoiced: number, totalPaid: number): string {
+    const balance = this.getCalculatedBalance(totalInvoiced, totalPaid);
+    if (balance < 0) return 'OverPaid (अतिरिक्त भुगतान)';
+    if (balance === 0) return 'Settled';
+    return 'Outstanding';
   }
 
   /**
@@ -243,12 +389,4 @@ export class OutstandingARComponent implements OnInit, OnDestroy, AfterViewInit 
 
 
 
-  /**
-   * Refresh data
-   */
-  refreshData(): void {
-    this.currentPage = 1;
-    this.loadOutstandingCustomers();
-    this.toastr.info('Data refreshed', 'Refresh');
-  }
 }

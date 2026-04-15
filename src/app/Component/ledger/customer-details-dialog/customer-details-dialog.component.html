@@ -39,10 +39,17 @@
               <span class="label">Total Paid</span>
               <span class="amount paid">{{ formatCurrency(customer.totalPaid) }}</span>
             </div>
-            <div class="summary-item">
+            <div class="summary-item" [class]="getBalanceStatusCss(customer.totalInvoiced, customer.totalPaid)">
               <span class="label">Outstanding Balance</span>
-              <span class="amount outstanding">{{ formatCurrency(customer.outstanding || customer.totalOutstanding) }}</span>
+              <span class="amount outstanding">{{ formatCurrency(getCalculatedBalance(customer.totalInvoiced, customer.totalPaid)) }}</span>
+              <span class="balance-status-label">{{ getBalanceStatusLabel(customer.totalInvoiced, customer.totalPaid) }}</span>
             </div>
+          </div>
+          <!-- Grand Total / Net Amount -->
+          <div class="grand-total-row" [class]="getBalanceStatusCss(customer.totalInvoiced, customer.totalPaid)">
+            <span class="label">Net Amount</span>
+            <span class="amount-value">{{ formatCurrency(getCalculatedBalance(customer.totalInvoiced, customer.totalPaid)) }}</span>
+            <span class="net-label">{{ getCalculatedBalance(customer.totalInvoiced, customer.totalPaid) < 0 ? '(OverPaid)' : '(Outstanding)' }}</span>
           </div>
         </mat-card-content>
       </mat-card>

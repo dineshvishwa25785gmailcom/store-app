@@ -194,28 +194,71 @@ export class LedgerService {
       `${this.baseUrl}CustomerLedger/outstanding/report/company`
     ).pipe(
       map(resp => {
-        // Backend returns paged data: { data: [customers], ... }
-        const customers = Array.isArray(resp?.data) ? resp.data : [];
-        const totalAR = customers.reduce((s: number, c: any) => s + (c.totalOutstanding || 0), 0);
-        const totalInvoiced = customers.reduce((s: number, c: any) => s + ((c.totalInvoiced) || 0), 0);
-        const totalPaid = customers.reduce((s: number, c: any) => s + ((c.totalPaid) || 0), 0);
-        const totalDue = customers.reduce((s: number, c: any) => {
-          const invoices = Array.isArray(c.outstandingInvoices) ? c.outstandingInvoices : [];
-          return s + invoices.reduce((si: number, inv: any) => si + (inv.daysOverdue > 0 ? (inv.outstanding || 0) : 0), 0);
-        }, 0);
-        const avgDays = customers.length ? Math.round(customers.reduce((s: number, c: any) => s + ((c.daysOutstanding) || 0), 0) / customers.length) : 0;
-        const largest = customers.length ? customers.reduce((max: any, c: any) => (c.totalOutstanding > (max.totalOutstanding || 0) ? c : max), customers[0]).customerName : '';
+        console.debug('[Company Summary] API response:', resp);
+        
+        // Backend may return either a list of customers (in resp.data) or a summary object.
+        const maybeArray = resp?.data ?? resp?.items ?? resp?.records ?? null;
+        if (Array.isArray(maybeArray)) {
+          const customers = maybeArray as any[];
+          
+          // Use outstandingAmount (new field) with fallback to totalOutstanding (old field)
+          const totalAR = customers.reduce((s: number, c: any) => s + Number(c.outstandingAmount ?? c.totalOutstanding ?? 0), 0);
+          const totalInvoiced = customers.reduce((s: number, c: any) => s + Number(c.totalInvoiced ?? 0), 0);
+          const totalPaid = customers.reduce((s: number, c: any) => s + Number(c.totalPaid ?? 0), 0);
+          
+          // totalDue: sum of outstanding amounts where customer has overdue items (averageDaysToPay > 0)
+          // Falls back to checking outstandingInvoices array if available
+          const totalDue = customers.reduce((s: number, c: any) => {
+            const outstanding = Number(c.outstandingAmount ?? c.totalOutstanding ?? 0);
+            const daysOverdue = Number(c.averageDaysToPay ?? c.daysOutstanding ?? 0);
+            
+            // If we have invoices array with daysOverdue details, use that; otherwise use averageDaysToPay threshold
+            const invoices = Array.isArray(c.outstandingInvoices) ? c.outstandingInvoices : [];
+            if (invoices.length > 0) {
+              return s + invoices.reduce((si: number, inv: any) => si + (inv.daysOverdue > 0 ? Number(inv.outstanding ?? 0) : 0), 0);
+            }
+            
+            // No invoice details, so if customer has outstanding and days > 0, count as due
+            return s + (outstanding > 0 && daysOverdue > 0 ? outstanding : 0);
+          }, 0);
+          
+          const avgDays = customers.length ? Math.round(customers.reduce((s: number, c: any) => s + Number(c.averageDaysToPay ?? c.daysOutstanding ?? 0), 0) / customers.length) : 0;
+          
+          // Find largest customer by outstanding amount
+          const largest = customers.length ? customers.reduce((max: any, c: any) => {
+            const maxOutstanding = Number(max.outstandingAmount ?? max.totalOutstanding ?? 0);
+            const cOutstanding = Number(c.outstandingAmount ?? c.totalOutstanding ?? 0);
+            return cOutstanding > maxOutstanding ? c : max;
+          }, customers[0]).customerName : '';
 
-        const summary: ledgerSummary = {
-          totalAR,
-          totalDue,
-          daysOutstanding: avgDays,
-          collectionRate: totalInvoiced > 0 ? (totalPaid / totalInvoiced) : 1,
-          largestCustomer: largest || '',
-          currency: 'INR'
+          const summary: ledgerSummary = {
+            totalAR,
+            totalDue,
+            totalPaid,
+            daysOutstanding: avgDays,
+            collectionRate: totalInvoiced > 0 ? (totalPaid / totalInvoiced) : 1,
+            largestCustomer: largest || '',
+            currency: 'INR'
+          };
+
+          console.debug('[Company Summary] Calculated summary:', summary);
+          return { result: 'pass', errorMessage: null, data: summary } as ledgerApiResponse;
+        }
+
+        // If backend returned a summary object directly use it
+        const s = resp?.data && typeof resp.data === 'object' ? resp.data : (resp && typeof resp === 'object' ? resp : {});
+        const summaryFromApi: ledgerSummary = {
+          totalAR: Number(s.totalAR ?? s.outstandingAmount ?? s.totalOutstanding ?? 0),
+          totalDue: Number(s.totalDue ?? s.outstandingAmount ?? 0),
+          totalPaid: Number(s.totalPaid ?? 0),
+          daysOutstanding: Number(s.daysOutstanding ?? s.averageDaysToPay ?? 0),
+          collectionRate: s.collectionRate ?? ((s.totalInvoiced && s.totalPaid) ? (s.totalPaid / s.totalInvoiced) : 1),
+          largestCustomer: s.largestCustomer ?? s.largest ?? s.customerName ?? '',
+          currency: s.currency ?? 'INR'
         };
 
-        return { result: 'pass', errorMessage: null, data: summary } as ledgerApiResponse;
+        console.debug('[Company Summary] Summary from API object:', summaryFromApi);
+        return { result: 'pass', errorMessage: null, data: summaryFromApi } as ledgerApiResponse;
       }),
       catchError(err => {
         if (err.status === 404) {
@@ -269,22 +312,64 @@ export class LedgerService {
    * Get list of customers with outstanding AR
    * Maps from: GET /api/ledger/outstanding/report/company
    */
-  getCustomersOutstanding(companyId: string, page: number = 1, pageSize: number = 10): Observable<ledgerApiResponse> {
+  /**
+   * Get outstanding customers with optional filtering
+   * Supports: amount filters, overdue filters, payment history, search, sorting, and pagination
+   */
+  getCustomersOutstanding(companyId: string, page: number = 1, pageSize: number = 10, filters?: any): Observable<ledgerApiResponse> {
+    // Build query string with filters
+    let queryParams = `pageNumber=${page}&pageSize=${pageSize}`;
+    
+    // Only add filters if they are provided
+    if (filters) {
+      // Amount filters
+      if (filters.includeFullyPaid !== undefined) queryParams += `&includeFullyPaid=${filters.includeFullyPaid}`;
+      if (filters.minOutstanding != null) queryParams += `&minOutstanding=${filters.minOutstanding}`;
+      if (filters.maxOutstanding != null) queryParams += `&maxOutstanding=${filters.maxOutstanding}`;
+      
+      // Overdue filters
+      if (filters.showOnlyOverdue) queryParams += `&showOnlyOverdue=true`;
+      if (filters.ageingBucket) queryParams += `&ageingBucket=${encodeURIComponent(filters.ageingBucket)}`;
+      if (filters.minDaysOverdue != null) queryParams += `&minDaysOverdue=${filters.minDaysOverdue}`;
+      
+      // Payment history filters
+      if (filters.neverPaid) queryParams += `&neverPaid=true`;
+      if (filters.minLastPaymentDays != null) queryParams += `&minLastPaymentDays=${filters.minLastPaymentDays}`;
+      
+      // Search filters
+      if (filters.customerName) queryParams += `&customerName=${encodeURIComponent(filters.customerName)}`;
+      if (filters.customerCompany) queryParams += `&customerCompany=${encodeURIComponent(filters.customerCompany)}`;
+      
+      // Sorting
+      if (filters.sortBy) queryParams += `&sortBy=${filters.sortBy}`;
+    }
+    
     return this.http.get<any>(
-      `${this.baseUrl}CustomerLedger/outstanding/report/company?pageNumber=${page}&pageSize=${pageSize}`
+      `${this.baseUrl}CustomerLedger/outstanding/report/company?${queryParams}`
     ).pipe(
       map(resp => {
-        // Map API response to customerOutstanding shape
-        const customers = Array.isArray(resp?.data) ? resp.data.map((c: any) => ({
-          customerId: c.customerId,
-          customerName: c.customerName,
-          totalInvoiced: (c.outstandingInvoices || []).reduce((sum: number, inv: any) => sum + (inv.originalAmount || 0), 0),
-          totalPaid: (c.outstandingInvoices || []).reduce((sum: number, inv: any) => sum + (inv.amountPaid || 0), 0),
-          balance: c.totalOutstanding || 0,
-          daysOutstanding: c.averageDaysToPay || 0,
-          lastPaymentDate: c.lastPaymentDate === '0001-01-01T00:00:00' ? null : c.lastPaymentDate
-        })) : [];
-        return { result: 'pass', errorMessage: null, data: customers, currentPage: resp?.currentPage, totalPages: resp?.totalPages, totalRecords: resp?.totalRecords } as ledgerApiResponse;
+        console.debug('[getCustomersOutstanding] API URL:', `${this.baseUrl}CustomerLedger/outstanding/report/company?${queryParams}`);
+        console.debug('[getCustomersOutstanding] API response:', resp);
+        
+        // Map API response to customerOutstanding shape. Accept multiple response shapes.
+        const list = Array.isArray(resp?.data) ? resp.data : (Array.isArray(resp?.items) ? resp.items : (Array.isArray(resp?.records) ? resp.records : (Array.isArray(resp) ? resp : [])));
+        const customers = (list || []).map((c: any) => {
+          return {
+            customerId: c.customerId ?? c.id ?? c.customerID ?? '',
+            customerName: c.customerName ?? c.name ?? c.customer ?? '',
+            totalInvoiced: Number(c.totalInvoiced ?? 0),
+            totalPaid: Number(c.totalPaid ?? 0),
+            balance: Number(c.outstandingAmount ?? c.totalOutstanding ?? c.balance ?? 0),
+            daysOutstanding: Number(c.averageDaysToPay ?? c.daysOutstanding ?? c.avgDays ?? 0),
+            lastPaymentDate: (c.lastPaymentDate === '0001-01-01T00:00:00' ? null : (c.lastPaymentDate ?? null)) || null
+          } as customerOutstanding;
+        });
+
+        const totalRecords = resp?.totalRecords ?? resp?.totalCount ?? resp?.total ?? (Array.isArray(list) ? list.length : 0);
+        const currentPage = resp?.currentPage ?? resp?.pageNumber ?? resp?.page ?? page;
+        const totalPages = resp?.totalPages ?? (pageSize ? Math.ceil((totalRecords || 0) / pageSize) : 1);
+
+        return { result: 'pass', errorMessage: null, data: customers, currentPage, totalPages, totalRecords } as ledgerApiResponse;
       }),
       catchError(err => {
         if (err.status === 404) {

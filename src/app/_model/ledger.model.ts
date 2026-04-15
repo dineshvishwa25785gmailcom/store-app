@@ -10,6 +10,13 @@ export interface ledgerApiResponse {
   errorMessage: string | null;
   message?: string;
   data?: any;
+  // Optional pagination / metadata fields returned by reporting endpoints
+  currentPage?: number;
+  pageNumber?: number;
+  pageSize?: number;
+  totalPages?: number;
+  totalRecords?: number;
+  totalCount?: number;
 }
 
 /**
@@ -19,6 +26,7 @@ export interface ledgerApiResponse {
 export interface ledgerSummary {
   totalAR: number;
   totalDue: number;
+  totalPaid: number;
   daysOutstanding: number;
   collectionRate: number;
   largestCustomer: string;
@@ -57,6 +65,34 @@ export interface customerOutstanding {
   balance: number;
   daysOutstanding: number;
   lastPaymentDate: string | null;
+}
+
+/**
+ * Advanced filter options for Outstanding A/R report
+ */
+export interface outstandingArFilters {
+  // Amount filters
+  includeFullyPaid?: boolean;      // Include customers with 0 outstanding
+  minOutstanding?: number | null;   // Minimum outstanding amount
+  maxOutstanding?: number | null;   // Maximum outstanding amount
+  
+  // Overdue filters
+  showOnlyOverdue?: boolean;        // Only show customers with overdue amounts
+  ageingBucket?: string | null;     // Filter by bucket: "0-30", "31-60", "61-90", "90+"
+  minDaysOverdue?: number;          // Threshold for overdue calculation
+  
+  // Payment history filters
+  neverPaid?: boolean;              // Only customers who never made a payment
+  minLastPaymentDays?: number | null; // No payment for X days
+  
+  // Search filters
+  customerName?: string | null;     // Search by customer name (partial match)
+  customerCompany?: string | null;  // Search by company name (partial match)
+  
+  // Sorting & Pagination
+  sortBy?: string;                  // "outstanding" | "daysOverdue" | "name" | "lastPaymentDate" | "highestOutstanding"
+  pageNumber?: number;              // Page number
+  pageSize?: number;                // Records per page
 }
 
 /**

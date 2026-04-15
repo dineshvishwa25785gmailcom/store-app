@@ -64,6 +64,34 @@ export class CustomerDetailsDialogComponent implements OnInit {
   }
 
   /**
+   * Calculate balance: Total Invoiced - Total Paid
+   * If negative, customer has overpaid
+   */
+  getCalculatedBalance(totalInvoiced: number, totalPaid: number): number {
+    return totalInvoiced - totalPaid;
+  }
+
+  /**
+   * Get CSS class for balance display (green if overpaid, red if owed)
+   */
+  getBalanceStatusCss(totalInvoiced: number, totalPaid: number): string {
+    const balance = this.getCalculatedBalance(totalInvoiced, totalPaid);
+    if (balance < 0) return 'balance-overpaid';      // Green for overpaid
+    if (balance === 0) return 'balance-settled';      // Blue/neutral for settled
+    return 'balance-outstanding';                     // Red for owed
+  }
+
+  /**
+   * Get label for balance status
+   */
+  getBalanceStatusLabel(totalInvoiced: number, totalPaid: number): string {
+    const balance = this.getCalculatedBalance(totalInvoiced, totalPaid);
+    if (balance < 0) return 'OverPaid (अतिरिक्त भुगतान)';
+    if (balance === 0) return 'Settled';
+    return 'Outstanding';
+  }
+
+  /**
    * Close dialog
    */
   closeDialog(): void {

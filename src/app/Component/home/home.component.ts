@@ -27,6 +27,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   // KPI values
   totalAR        = 0;
+  totalPaid      = 0;
   overdueAmount  = 0;
   customerCount  = 0;
   invoiceCount   = 0;
@@ -85,11 +86,15 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (companyId) {
       this.ledgerSvc.getCompanySummary(companyId).pipe(takeUntil(this.destroy$)).subscribe({
         next: (resp: any) => {
+          console.debug('[Home] Company summary response:', resp);
           const summary = resp?.data || {};
-          this.totalAR = summary?.totalAR || 0;
-          this.overdueAmount = summary?.totalDue || 0;
+          this.totalAR = Number(summary?.totalAR ?? 0);
+          this.totalPaid = Number(summary?.totalPaid ?? 0);
+          this.overdueAmount = Number(summary?.totalDue ?? 0);
+          console.debug('[Home] KPI values - totalAR:', this.totalAR, 'totalPaid:', this.totalPaid, 'overdueAmount:', this.overdueAmount);
         },
-        error: () => {
+        error: (err) => {
+          console.error('[Home] Error loading company summary:', err);
           this.totalAR = 0;
           this.overdueAmount = 0;
         }

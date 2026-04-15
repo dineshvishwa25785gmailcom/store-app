@@ -20,7 +20,7 @@
   <!-- Loading skeleton -->
   @if (loading) {
     <div class="kpi-grid">
-      @for (i of [1,2,3,4]; track i) {
+      @for (i of [1,2,3,4,5]; track i) {
         <div class="kpi-card skeleton" style="height:100px"></div>
       }
     </div>
@@ -38,6 +38,18 @@
           <div class="kpi-body">
             <div class="kpi-value">₹{{ totalAR | number:'1.0-0' }}</div>
             <div class="kpi-label">Total A/R</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card kpi-success" routerLink="/ledger-dashboard">
+        <mat-card-content>
+          <div class="kpi-icon-wrap">
+            <mat-icon aria-hidden="true">check_circle</mat-icon>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-value">₹{{ totalPaid | number:'1.0-0' }}</div>
+            <div class="kpi-label">Total Paid</div>
           </div>
         </mat-card-content>
       </mat-card>

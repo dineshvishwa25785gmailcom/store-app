@@ -116,6 +116,137 @@ mat-dialog-content {
   color: #d32f2f;
 }
 
+/* Balance Status Classes */
+.summary-item.balance-overpaid .amount {
+  color: #2e7d32;
+  font-weight: 700;
+  font-size: 1.4rem;
+}
+
+.summary-item.balance-overpaid .balance-status-label {
+  display: inline-block;
+  background: linear-gradient(135deg, #a5d6a7 0%, #81c784 100%);
+  color: #1b5e20;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.summary-item.balance-settled .amount {
+  color: #1976d2;
+  font-weight: 700;
+  font-size: 1.4rem;
+}
+
+.summary-item.balance-settled .balance-status-label {
+  display: inline-block;
+  background: linear-gradient(135deg, #90caf9 0%, #64b5f6 100%);
+  color: #0d47a1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.summary-item.balance-outstanding .amount {
+  color: #d32f2f;
+  font-weight: 700;
+  font-size: 1.4rem;
+}
+
+.summary-item.balance-outstanding .balance-status-label {
+  display: inline-block;
+  background: linear-gradient(135deg, #ef9a9a 0%, #e57373 100%);
+  color: #b71c1c;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+/* Grand Total / Net Amount Row */
+.grand-total-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border-top: 2px solid #e0e0e0;
+  padding-top: 20px;
+}
+
+.grand-total-row.balance-overpaid {
+  background-color: #e8f5e9;
+  border-top-color: #81c784;
+}
+
+.grand-total-row.balance-overpaid .label {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.grand-total-row.balance-overpaid .amount-value {
+  color: #1b5e20;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.grand-total-row.balance-overpaid .net-label {
+  color: #1b5e20;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.grand-total-row.balance-settled {
+  background-color: #e3f2fd;
+  border-top-color: #64b5f6;
+}
+
+.grand-total-row.balance-settled .label {
+  color: #1565c0;
+  font-weight: 600;
+}
+
+.grand-total-row.balance-settled .amount-value {
+  color: #0d47a1;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.grand-total-row.balance-settled .net-label {
+  color: #0d47a1;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.grand-total-row.balance-outstanding {
+  background-color: #ffebee;
+  border-top-color: #ef5350;
+}
+
+.grand-total-row.balance-outstanding .label {
+  color: #c62828;
+  font-weight: 600;
+}
+
+.grand-total-row.balance-outstanding .amount-value {
+  color: #b71c1c;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.grand-total-row.balance-outstanding .net-label {
+  color: #b71c1c;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 /* Two Column Layout */
 .two-column {
   display: grid;

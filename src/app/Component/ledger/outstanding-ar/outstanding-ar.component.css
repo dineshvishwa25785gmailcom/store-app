@@ -19,6 +19,72 @@
   color: #333;
 }
 
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.filter-toggle {
+  min-width: 140px;
+}
+
+/* Filter Panel */
+.filters-panel {
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+}
+
+.filters-panel mat-card-header {
+  background-color: #f5f5f5;
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+}
+
+.filters-panel mat-card-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1976d2;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.filter-field {
+  width: 100%;
+}
+
+.filter-toggles {
+  display: flex;
+  gap: 20px;
+  padding: 12px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+.filter-toggles mat-checkbox {
+  flex: 1;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.filter-actions button {
+  min-width: 120px;
+}
+
 /* Error Card */
 .error-card {
   margin-bottom: 20px;
@@ -98,6 +164,65 @@
   font-size: 16px;
   font-weight: 600;
   color: #d32f2f;
+}
+
+/* Balance Cell with Status */
+.balance-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+/* Overpaid Status (Green) */
+.balance-cell.balance-overpaid .balance-value {
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.balance-cell.balance-overpaid .balance-label {
+  display: inline-block;
+  background-color: #c8e6c9;
+  color: #1b5e20;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Settled Status (Blue) */
+.balance-cell.balance-settled .balance-value {
+  color: #1976d2;
+  font-weight: 700;
+}
+
+.balance-cell.balance-settled .balance-label {
+  display: inline-block;
+  background-color: #bbdefb;
+  color: #0d47a1;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Outstanding Status (Red) */
+.balance-cell.balance-outstanding .balance-value {
+  color: #d32f2f;
+  font-weight: 700;
+}
+
+.balance-cell.balance-outstanding .balance-label {
+  display: inline-block;
+  background-color: #ffcdd2;
+  color: #b71c1c;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 2px;
 }
 
 /* Days Badge */
